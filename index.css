@@ -279,16 +279,16 @@ body {
 /* 목록 그리드 */
 .list-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 8px;
 }
 
 /* 챔피언 / 아이템 카드 */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 8px;
+  border-radius: 4px;
+  padding: 4px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -296,10 +296,10 @@ body {
 }
 
 .card-item:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: var(--color-gold);
   background-color: var(--bg-tertiary);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .card-item.selected {
@@ -312,9 +312,9 @@ body {
   position: relative;
   width: 100%;
   padding-top: 100%; /* 1:1 비율 */
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   background-color: var(--bg-primary);
 }
 
@@ -328,12 +328,13 @@ body {
 }
 
 .card-name {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 500;
   color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
 /* 우측 상세 정보 섹션 */

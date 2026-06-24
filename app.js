@@ -326,10 +326,8 @@ async function showChampionDetail(championId) {
     state.championDetails[championId] = detailData; // 캐시에 보관
   }
 
-  // Meraki 상세 스펙 데이터 비동기 로드
-  if (!state.merakiChampions) {
-    await loadMerakiData();
-  }
+  // 선택한 챔피언의 Meraki 상세 스펙 데이터 비동기 로드 (개별 낱개 로드)
+  await loadMerakiChampionData(championId);
 
   const merakiChamp = state.merakiChampions ? state.merakiChampions[championId] : null;
 
@@ -601,15 +599,25 @@ const ATTRIBUTE_MAP = {
   "Base Damage": "기본 피해량"
 };
 
-// Meraki API에서 챔피언 상세 스펙 로드
-async function loadMerakiData() {
+// 선택된 챔피언의 Meraki 스펙 데이터를 개별 로드 (CORS 우회를 위해 allorigins 프록시 적용)
+async function loadMerakiChampionData(championId) {
+  // 이미 캐시되어 있다면 스킵
+  if (state.merakiChampions && state.merakiChampions[championId]) return;
+  
+  if (!state.merakiChampions) {
+    state.merakiChampions = {};
+  }
+  
   try {
-    const response = await fetch('https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions.json');
-    if (!response.ok) throw new Error('Meraki 데이터 로드 실패');
-    state.merakiChampions = await response.json();
-    console.log('Meraki 스펙 데이터 로드 성공');
+    const targetUrl = `https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions/${championId}.json`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    const response = await fetch(proxyUrl);
+    if (!response.ok) throw new Error(`${championId} Meraki 데이터 로드 실패`);
+    const data = await response.json();
+    state.merakiChampions[championId] = data;
+    console.log(`${championId} Meraki 스펙 로드 완료 (CORS 우회)`);
   } catch (error) {
-    console.warn('Meraki 데이터 로드 실패 (계수가 생략될 수 있습니다):', error);
+    console.warn(`${championId} Meraki 데이터 로드 실패 (계수가 생략될 수 있습니다):`, error);
   }
 }
 

@@ -684,7 +684,24 @@ body {
 }
 
 .scaling-ratio {
-  color: #ffaa00;
   font-size: 10px;
   font-weight: 600;
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.scaling-ap {
+  color: #7972fa; /* 마법피해 AP 계수 색상 (첨부 이미지 색상) */
+}
+
+.scaling-ad {
+  color: #ffaa00; /* 공격력 AD 계수 색상 */
+}
+
+.scaling-hp {
+  color: #ff5555; /* 체력 계수 색상 */
+}
+
+.scaling-other {
+  color: #9ca3af; /* 기타 계수 색상 */
 }

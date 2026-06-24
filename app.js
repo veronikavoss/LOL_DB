@@ -670,19 +670,29 @@ function getSkillSpecsHtml(merakiSpell) {
           let scalingStr = '';
           if (modifiers.length > 1) {
             const scalings = modifiers.slice(1).map(mod => {
-              const val = Math.round(mod.values[0] * 100); // 0.5 -> 50%
+              // Meraki 데이터는 이미 백분율 수치(예: 65)로 들어있으므로 100을 곱하지 않고 그대로 소수점 둘째자리 반올림하여 사용합니다.
+              const val = Math.round(mod.values[0] * 100) / 100;
               const unit = mod.units[0] || '';
               
-              // AD, AP, HP 등 계수 명칭 포맷팅
+              // AD, AP, HP 등 계수 명칭 포맷팅 및 타입 분류
               let formattedUnit = unit;
-              if (unit.includes('AD')) formattedUnit = 'AD';
-              else if (unit.includes('AP')) formattedUnit = 'AP';
-              else if (unit.includes('HP')) formattedUnit = '최대 체력';
+              let scaleType = 'other';
               
-              return `+${val}${formattedUnit}`;
-            }).join(' / ');
+              if (unit.includes('AD')) {
+                formattedUnit = 'AD';
+                scaleType = 'ad';
+              } else if (unit.includes('AP')) {
+                formattedUnit = 'AP';
+                scaleType = 'ap';
+              } else if (unit.includes('HP')) {
+                formattedUnit = '최대 체력';
+                scaleType = 'hp';
+              }
+              
+              return `<span class="scaling-ratio scaling-${scaleType}">(+ ${val}% ${formattedUnit})</span>`;
+            }).join(' ');
             
-            scalingStr = ` <span class="scaling-ratio">(${scalings})</span>`;
+            scalingStr = ` ${scalings}`;
           }
           
           html += `

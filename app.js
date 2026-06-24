@@ -11,7 +11,7 @@ const state = {
   selectedId: null,
   // 챔피언 상세 정보 캐시
   championDetails: {},
-  // Meraki API 챔피언 상세 스펙 캐시
+  // 로컬 로드된 챔피언 상세 스펙 캐시
   merakiChampions: null
 };
 
@@ -326,10 +326,13 @@ async function showChampionDetail(championId) {
     state.championDetails[championId] = detailData; // 캐시에 보관
   }
 
-  // 선택한 챔피언의 Meraki 상세 스펙 데이터 비동기 로드 (개별 낱개 로드)
-  await loadMerakiChampionData(championId);
+  // 로컬 Meraki 상세 스펙 데이터 최초 1회 일괄 로드
+  if (!state.merakiChampions) {
+    await loadMerakiData();
+  }
 
-  const merakiChamp = state.merakiChampions ? state.merakiChampions[championId] : null;
+  // ID 불일치(오공, 누누 등)를 보정하여 100% 완벽 매핑
+  const merakiChamp = findMerakiChampion(championId, detailData);
 
   // 스탯 맵핑
   const stats = detailData.stats;
@@ -599,26 +602,48 @@ const ATTRIBUTE_MAP = {
   "Base Damage": "기본 피해량"
 };
 
-// 선택된 챔피언의 Meraki 스펙 데이터를 개별 로드 (CORS 우회를 위해 allorigins 프록시 적용)
-async function loadMerakiChampionData(championId) {
-  // 이미 캐시되어 있다면 스킵
-  if (state.merakiChampions && state.merakiChampions[championId]) return;
-  
-  if (!state.merakiChampions) {
-    state.merakiChampions = {};
-  }
-  
+// 로컬에 보관된 Meraki 스펙 데이터를 최초 1회 일괄 로드 (CORS 및 속도제한 완벽 해결)
+async function loadMerakiData() {
   try {
-    const targetUrl = `https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions/${championId}.json`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) throw new Error(`${championId} Meraki 데이터 로드 실패`);
-    const data = await response.json();
-    state.merakiChampions[championId] = data;
-    console.log(`${championId} Meraki 스펙 로드 완료 (CORS 우회)`);
+    const response = await fetch('champions.json');
+    if (!response.ok) throw new Error('로컬 스펙 데이터 로드 실패');
+    state.merakiChampions = await response.json();
+    console.log('로컬 챔피언 스펙 데이터 로드 완료');
   } catch (error) {
-    console.warn(`${championId} Meraki 데이터 로드 실패 (계수가 생략될 수 있습니다):`, error);
+    console.warn('로컬 스펙 데이터 로드 실패 (계수가 생략될 수 있습니다):', error);
   }
+}
+
+// DDragon ID와 Meraki 챔피언 Key 간의 불일치를 보정해주는 매핑 함수
+function findMerakiChampion(championId, detailData) {
+  if (!state.merakiChampions) return null;
+  
+  // 1. DDragon ID로 직접 찾기 (예: Garen, Ahri)
+  if (state.merakiChampions[championId]) {
+    return state.merakiChampions[championId];
+  }
+  
+  // 2. 대소문자 무관 대조하여 찾기
+  const lowerId = championId.toLowerCase();
+  const foundKey = Object.keys(state.merakiChampions).find(k => k.toLowerCase() === lowerId);
+  if (foundKey) {
+    return state.merakiChampions[foundKey];
+  }
+
+  // 3. 고유 숫자 ID 대조하여 찾기 (가장 정확함 - 오공 MonkeyKing "62" 등 매핑 성공)
+  const numericKey = parseInt(detailData.key);
+  const foundByNumericKey = Object.values(state.merakiChampions).find(c => c.id === numericKey);
+  if (foundByNumericKey) {
+    return foundByNumericKey;
+  }
+
+  // 4. 한글 이름 또는 영문명 매칭 Fallback
+  const foundByName = Object.values(state.merakiChampions).find(c => c.name.toLowerCase() === detailData.name.toLowerCase());
+  if (foundByName) {
+    return foundByName;
+  }
+  
+  return null;
 }
 
 // 스킬의 기본 스펙 및 계수 HTML 생성

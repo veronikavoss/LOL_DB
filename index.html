@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoL 리그 오브 레전드 도감</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="index.css?v=1.0.2">
+</head>
+<body>
+  <!-- 로딩 오버레이 -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>데이터를 불러오는 중입니다...</p>
+  </div>
+
+  <div class="app-container">
+    <!-- 헤더 영역 -->
+    <header class="main-header">
+      <div class="header-logo">
+        <span class="logo-text">LOL DEX</span>
+        <span class="patch-version" id="patch-version">Ver. 0.0.0</span>
+      </div>
+      <nav class="tab-navigation">
+        <button class="tab-btn active" id="tab-champions" data-tab="champions">챔피언 도감</button>
+        <button class="tab-btn" id="tab-items" data-tab="items">아이템 도감</button>
+      </nav>
+    </header>
+
+    <!-- 메인 레이아웃 (분할 화면) -->
+    <main class="main-content">
+      <!-- 좌측 목록 영역 -->
+      <section class="list-section">
+        <div class="filter-bar">
+          <!-- 검색창 -->
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="이름을 입력하여 검색..." autocomplete="off">
+            <button class="clear-btn" id="clear-search-btn" style="display: none;">&times;</button>
+          </div>
+
+          <!-- 필터 카테고리 (챔피언 역할군 또는 아이템 태그) -->
+          <div class="filter-group" id="filter-group">
+            <!-- JS에서 동적으로 역할군 필터 또는 아이템 카테고리 필터 버튼 렌더링 -->
+          </div>
+        </div>
+
+        <!-- 목록 컨테이너 -->
+        <div class="list-scroll-area">
+          <div class="list-grid" id="list-grid">
+            <!-- JS를 통해 챔피언/아이템 카드들이 동적으로 생성됨 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 우측 상세 정보 패널 -->
+      <section class="detail-section" id="detail-panel">
+        <div class="empty-detail-state" id="empty-detail-state">
+          <div class="empty-icon">🛡️</div>
+          <h3>상세 정보 뷰어</h3>
+          <p>좌측 목록에서 챔피언이나 아이템을 클릭하면 상세 정보가 이곳에 표시됩니다.</p>
+        </div>
+
+        <div class="detail-content-area hidden" id="detail-content-area">
+          <!-- JS를 통해 상세 정보(이름, 능력치, 스킬, 아이템 등)가 동적으로 렌더링됨 -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Script -->
+  <script src="app.js?v=1.0.3"></script>
+</body>
+</html>

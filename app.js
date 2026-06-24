@@ -10,7 +10,9 @@ const state = {
   activeFilter: 'ALL',
   selectedId: null,
   // 챔피언 상세 정보 캐시
-  championDetails: {}
+  championDetails: {},
+  // Meraki API 챔피언 상세 스펙 캐시
+  merakiChampions: null
 };
 
 // 역할군 영문 -> 국문 매핑
@@ -324,6 +326,13 @@ async function showChampionDetail(championId) {
     state.championDetails[championId] = detailData; // 캐시에 보관
   }
 
+  // Meraki 상세 스펙 데이터 비동기 로드
+  if (!state.merakiChampions) {
+    await loadMerakiData();
+  }
+
+  const merakiChamp = state.merakiChampions ? state.merakiChampions[championId] : null;
+
   // 스탯 맵핑
   const stats = detailData.stats;
   const statLabels = [
@@ -350,6 +359,10 @@ async function showChampionDetail(championId) {
   const spells = detailData.spells;
   const skillKeys = ['Q', 'W', 'E', 'R'];
 
+  // 패시브 수치 획득
+  const merakiPassive = merakiChamp && merakiChamp.abilities ? merakiChamp.abilities.P[0] : null;
+  const passiveSpecsHtml = getSkillSpecsHtml(merakiPassive);
+
   let skillsHtml = `
     <!-- 패시브 -->
     <div class="skill-row">
@@ -363,6 +376,7 @@ async function showChampionDetail(championId) {
           <span class="skill-meta">패시브</span>
         </div>
         <div class="skill-desc">${cleanHtml(passive.description)}</div>
+        ${passiveSpecsHtml}
       </div>
     </div>
   `;
@@ -371,6 +385,10 @@ async function showChampionDetail(championId) {
     const key = skillKeys[index] || '';
     const cooldown = spell.cooldownBurn ? `${spell.cooldownBurn}초` : '없음';
     const cost = spell.costBurn ? `${spell.costBurn} ${detailData.partype || '마나'}` : '없음';
+
+    // Meraki 스펙으로부터 스킬 계수 및 데미지 데이터 획득
+    const merakiSpell = merakiChamp && merakiChamp.abilities ? merakiChamp.abilities[key][0] : null;
+    const skillSpecsHtml = getSkillSpecsHtml(merakiSpell);
 
     skillsHtml += `
       <div class="skill-row">
@@ -385,6 +403,7 @@ async function showChampionDetail(championId) {
           </div>
           <div class="skill-meta" style="margin-top: -2px; opacity: 0.85;">소모: ${cost}</div>
           <div class="skill-desc">${cleanHtml(spell.description)}</div>
+          ${skillSpecsHtml}
         </div>
       </div>
     `;
@@ -555,3 +574,95 @@ function cleanHtml(html) {
 
 // 초기화 시작
 document.addEventListener('DOMContentLoaded', init);
+
+// --- Meraki Analytics 스킬 수치 및 계수 연동 모듈 ---
+
+// 한글 맵핑 딕셔너리
+const ATTRIBUTE_MAP = {
+  "Damage": "피해량",
+  "Bonus Physical Damage": "추가 물리 피해",
+  "Physical Damage": "물리 피해",
+  "Magic Damage": "마법 피해",
+  "Bonus Magic Damage": "추가 마법 피해",
+  "True Damage": "고정 피해",
+  "Cooldown": "재사용 대기시간",
+  "Movement Speed": "이동 속도 증가",
+  "Movement Speed Duration": "이동 속도 지속시간",
+  "Silence Duration": "침묵 지속시간",
+  "Shield": "보호막 흡수량",
+  "Armor": "방어력 증가",
+  "Magic Resist": "마법 저항력 증가",
+  "Duration": "지속시간",
+  "Range": "사정거리",
+  "Slow": "둔화 비율",
+  "Healing": "회복량",
+  "Mana": "마나 회복",
+  "Cost": "소모값",
+  "Base Damage": "기본 피해량"
+};
+
+// Meraki API에서 챔피언 상세 스펙 로드
+async function loadMerakiData() {
+  try {
+    const response = await fetch('https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions.json');
+    if (!response.ok) throw new Error('Meraki 데이터 로드 실패');
+    state.merakiChampions = await response.json();
+    console.log('Meraki 스펙 데이터 로드 성공');
+  } catch (error) {
+    console.warn('Meraki 데이터 로드 실패 (계수가 생략될 수 있습니다):', error);
+  }
+}
+
+// 스킬의 기본 스펙 및 계수 HTML 생성
+function getSkillSpecsHtml(merakiSpell) {
+  if (!merakiSpell || !merakiSpell.effects || merakiSpell.effects.length === 0) return '';
+  
+  let html = '<div class="skill-specs-box">';
+  let hasSpecs = false;
+
+  merakiSpell.effects.forEach(effect => {
+    if (effect.leveling && effect.leveling.length > 0) {
+      effect.leveling.forEach(lvl => {
+        const attrName = ATTRIBUTE_MAP[lvl.attribute] || lvl.attribute;
+        const modifiers = lvl.modifiers;
+        
+        if (modifiers && modifiers.length > 0) {
+          hasSpecs = true;
+          
+          // 기본 수치들 (스킬 레벨별)
+          const baseValues = modifiers[0].values.map(v => Math.round(v * 100) / 100).join(' / ');
+          const baseUnit = modifiers[0].units[0] || '';
+          
+          // 계수 수치들 (AD, AP, 추가 체력 등)
+          let scalingStr = '';
+          if (modifiers.length > 1) {
+            const scalings = modifiers.slice(1).map(mod => {
+              const val = Math.round(mod.values[0] * 100); // 0.5 -> 50%
+              const unit = mod.units[0] || '';
+              
+              // AD, AP, HP 등 계수 명칭 포맷팅
+              let formattedUnit = unit;
+              if (unit.includes('AD')) formattedUnit = 'AD';
+              else if (unit.includes('AP')) formattedUnit = 'AP';
+              else if (unit.includes('HP')) formattedUnit = '최대 체력';
+              
+              return `+${val}${formattedUnit}`;
+            }).join(' / ');
+            
+            scalingStr = ` <span class="scaling-ratio">(${scalings})</span>`;
+          }
+          
+          html += `
+            <div class="spec-line">
+              <span class="spec-attr">${attrName}</span>
+              <span class="spec-val">${baseValues}${baseUnit}${scalingStr}</span>
+            </div>
+          `;
+        }
+      });
+    }
+  });
+
+  html += '</div>';
+  return hasSpecs ? html : '';
+}

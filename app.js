@@ -599,8 +599,83 @@ const ATTRIBUTE_MAP = {
   "Healing": "회복량",
   "Mana": "마나 회복",
   "Cost": "소모값",
-  "Base Damage": "기본 피해량"
+  "Base Damage": "기본 피해량",
+  
+  // 추가 확장 키 (챔피언별 정밀 스펙 한글화)
+  "Damage Reduction": "피해량 감소",
+  "Shield Strength": "보호막 흡수량",
+  "Physical Damage Per Spin": "회전당 물리 피해",
+  "Increased Damage Per Spin": "회전당 증가 피해",
+  "Damage Per Pass": "관통당 피해",
+  "Total Mixed Damage": "총 혼합 피해",
+  "Initial Flame Magic Damage": "첫 여우불 마법 피해",
+  "Subsequent Flame Magic Damage": "이후 여우불 마법 피해",
+  "Total Single-Target Damage": "단일 대상 총 피해",
+  "Increased Initial Flame Minion Damage": "미니언 대상 첫 여우불 증가 피해",
+  "Increased Subsequent Flame Minion Damage": "미니언 대상 이후 여우불 증가 피해",
+  "Disable Duration": "군중제어 지속시간",
+  "Wall Width": "장막 너비",
+  "Bonus Damage per Stack": "중첩당 추가 피해",
+  "Maximum Bonus Damage": "최대 추가 피해",
+  "Total Combined Damage": "총 결합 피해",
+  "Total Damage": "총 피해량",
+  "Active Damage": "활성화 피해량",
+  "Passive Damage": "지속 효과 피해량",
+  "Minimum Damage": "최소 피해량",
+  "Maximum Damage": "최대 피해량",
+  "Attack Speed": "공격 속도",
+  "Bonus Attack Speed": "추가 공격 속도",
+  "Armor Penetration": "방어구 관통력",
+  "Magic Penetration": "마법 관통력",
+  "Stun Duration": "기절 지속시간",
+  "Root Duration": "속박 지속시간",
+  "Knockup Duration": "에어본 지속시간",
+  "Slow Duration": "둔화 지속시간",
+  "Heal": "회복량",
+  "Attack Range": "공격 사거리"
 };
+
+// 단위 및 계수 설명 한글 번역 맵
+const UNIT_MAP = {
+  "seconds": "초",
+  "second": "초",
+  "s": "초",
+  "bonus health": "추가 체력",
+  "maximum health": "최대 체력",
+  "max health": "최대 체력",
+  "missing health": "잃은 체력",
+  "of target's missing health": "대상 잃은 체력 비례",
+  "target's missing health": "대상 잃은 체력 비례",
+  "bonus AD": "추가 공격력",
+  "total AD": "총 공격력",
+  "AD": "공격력",
+  "AP": "주문력",
+  "armor": "방어력",
+  "magic resist": "마법 저항력",
+  "bonus armor": "추가 방어력",
+  "bonus magic resist": "추가 마법 저항력",
+  "mana": "마나",
+  "energy": "기력"
+};
+
+// 단위/계수 영문 텍스트 번역 함수
+function translateUnit(unitStr) {
+  if (!unitStr) return '';
+  const trimmed = unitStr.trim();
+  const lower = trimmed.toLowerCase();
+  
+  // 완전 일치 대조
+  if (UNIT_MAP[trimmed]) return UNIT_MAP[trimmed];
+  if (UNIT_MAP[lower]) return UNIT_MAP[lower];
+  
+  // 복합 텍스트 부분 치환 (예: "of target's missing health" 등 단어 단위 치환)
+  let result = trimmed;
+  for (const [eng, kor] of Object.entries(UNIT_MAP)) {
+    const regex = new RegExp(`\\b${eng}\\b`, 'gi');
+    result = result.replace(regex, kor);
+  }
+  return result;
+}
 
 // 로컬에 보관된 Meraki 스펙 데이터를 최초 1회 일괄 로드 (CORS 및 속도제한 완벽 해결)
 async function loadMerakiData() {
@@ -664,7 +739,7 @@ function getSkillSpecsHtml(merakiSpell) {
           
           // 기본 수치들 (스킬 레벨별)
           const baseValues = modifiers[0].values.map(v => Math.round(v * 100) / 100).join(' / ');
-          const baseUnit = modifiers[0].units[0] || '';
+          const baseUnit = translateUnit(modifiers[0].units[0] || '');
           
           // 계수 수치들 (AD, AP, 추가 체력 등)
           let scalingStr = '';
@@ -673,23 +748,21 @@ function getSkillSpecsHtml(merakiSpell) {
               // Meraki 데이터는 이미 백분율 수치(예: 65)로 들어있으므로 100을 곱하지 않고 그대로 소수점 둘째자리 반올림하여 사용합니다.
               const val = Math.round(mod.values[0] * 100) / 100;
               const unit = mod.units[0] || '';
+              const translatedUnit = translateUnit(unit);
               
               // AD, AP, HP 등 계수 명칭 포맷팅 및 타입 분류
-              let formattedUnit = unit;
               let scaleType = 'other';
+              const lowerUnit = unit.toLowerCase();
               
-              if (unit.includes('AD')) {
-                formattedUnit = 'AD';
+              if (lowerUnit.includes('ad')) {
                 scaleType = 'ad';
-              } else if (unit.includes('AP')) {
-                formattedUnit = 'AP';
+              } else if (lowerUnit.includes('ap')) {
                 scaleType = 'ap';
-              } else if (unit.includes('HP')) {
-                formattedUnit = '최대 체력';
+              } else if (lowerUnit.includes('health') || lowerUnit.includes('hp')) {
                 scaleType = 'hp';
               }
               
-              return `<span class="scaling-ratio scaling-${scaleType}">(+ ${val}% ${formattedUnit})</span>`;
+              return `<span class="scaling-ratio scaling-${scaleType}">(+ ${val}% ${translatedUnit})</span>`;
             }).join(' ');
             
             scalingStr = ` ${scalings}`;

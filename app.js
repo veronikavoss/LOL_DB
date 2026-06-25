@@ -26,6 +26,27 @@ const CHAMPION_TAG_MAP = {
   'Support': '서포터'
 };
 
+// 리소스 종류 영문 -> 국문 매핑 및 변환 함수
+const RESOURCE_MAP = {
+  "Mana": "마나",
+  "Energy": "기력",
+  "Rage": "분노",
+  "Fury": "분노",
+  "Flow": "기류",
+  "Heat": "열기",
+  "Ferocity": "야성",
+  "Blood Well": "피의 샘",
+  "Shield": "보호막",
+  "None": "없음",
+  "Crimson Rush": "핏빛 격분"
+};
+function translateResource(resourceStr) {
+  if (!resourceStr) return '없음';
+  const trimmed = resourceStr.trim();
+  if (trimmed === '' || trimmed.toLowerCase() === 'none') return '없음';
+  return RESOURCE_MAP[trimmed] || trimmed;
+}
+
 // 아이템 태그 영문 -> 국문 매핑 및 필터
 const ITEM_TAG_MAP = {
   'ALL': '전체',
@@ -385,7 +406,7 @@ async function showChampionDetail(championId) {
   spells.forEach((spell, index) => {
     const key = skillKeys[index] || '';
     const cooldown = spell.cooldownBurn ? `${spell.cooldownBurn}초` : '없음';
-    const cost = spell.costBurn ? `${spell.costBurn} ${detailData.partype || '마나'}` : '없음';
+    const cost = spell.costBurn ? `${spell.costBurn} ${translateResource(detailData.partype)}` : '없음';
 
     // Meraki 스펙으로부터 스킬 계수 및 데미지 데이터 획득
     const merakiSpell = merakiChamp && merakiChamp.abilities ? merakiChamp.abilities[key][0] : null;
@@ -421,7 +442,7 @@ async function showChampionDetail(championId) {
         <h2 class="detail-title">${detailData.name}</h2>
         <div class="detail-tags">
           <span class="detail-tag">${tagsText}</span>
-          <span class="detail-tag">리소스: ${detailData.partype}</span>
+          <span class="detail-tag">리소스: ${translateResource(detailData.partype)}</span>
         </div>
       </div>
     </div>
@@ -601,7 +622,20 @@ const ATTRIBUTE_MAP = {
   "Cost": "소모값",
   "Base Damage": "기본 피해량",
   
-  // 추가 확장 키 (챔피언별 정밀 스펙 한글화)
+  // 오른(Ornn) W 및 추가 세부 번역 데이터
+  "Total Magic Damage": "총 마법 피해량",
+  "Magic Damage Per Tick": "틱당 마법 피해량",
+  "Total Minimum/Minion Damage": "미니언 대상 총 최소 피해량",
+  "Minimum/Minion Damage Per Tick": "미니언 대상 틱당 최소 피해량",
+  "Total Monster Damage Cap": "몬스터 대상 최대 피해량 제한",
+  "Monster Damage Cap Per Tick": "몬스터 대상 틱당 최대 피해량 제한",
+  "Percent Health Damage": "체력 백분율 피해량",
+  "Total Physical Damage": "총 물리 피해량",
+  "Physical Damage Per Tick": "틱당 물리 피해량",
+  "Total True Damage": "총 고정 피해량",
+  "True Damage Per Tick": "틱당 고정 피해량",
+
+  // 기존 한글화 확장 용어
   "Damage Reduction": "피해량 감소",
   "Shield Strength": "보호막 흡수량",
   "Physical Damage Per Spin": "회전당 물리 피해",
@@ -635,17 +669,27 @@ const ATTRIBUTE_MAP = {
   "Attack Range": "공격 사거리"
 };
 
-// 단위 및 계수 설명 한글 번역 맵
+// 단위 및 계수 설명 한글 번역 맵 (문장 통째로 번역하여 내부 's 분할 참사 방지)
 const UNIT_MAP = {
-  "seconds": "초",
-  "second": "초",
-  "s": "초",
+  "of target's maximum health": "대상 최대 체력 비례",
+  "target's maximum health": "대상 최대 체력 비례",
+  "of target's missing health": "대상 잃은 체력 비례",
+  "target's missing health": "대상 잃은 체력 비례",
+  "of target's current health": "대상 현재 체력 비례",
+  "target's current health": "대상 현재 체력 비례",
+  "of target's max health": "대상 최대 체력 비례",
+  "target's max health": "대상 최대 체력 비례",
+  "of target's missing HP": "대상 잃은 체력 비례",
+  "target's missing HP": "대상 잃은 체력 비례",
+  "of target's max HP": "대상 최대 체력 비례",
+  "target's max HP": "대상 최대 체력 비례",
+  "of target's health": "대상 체력 비례",
+  "target's health": "대상 체력 비례",
+  
   "bonus health": "추가 체력",
   "maximum health": "최대 체력",
   "max health": "최대 체력",
   "missing health": "잃은 체력",
-  "of target's missing health": "대상 잃은 체력 비례",
-  "target's missing health": "대상 잃은 체력 비례",
   "bonus AD": "추가 공격력",
   "total AD": "총 공격력",
   "AD": "공격력",
@@ -666,25 +710,33 @@ function translateUnit(unitStr) {
   // 단일 % 기호인 경우 그대로 반환
   if (trimmed === '%') return '%';
   
-  // Meraki 데이터에서 유입되는 중복 % 접두사 제거 (예: "% bonus health" -> "bonus health")
+  // Meraki 데이터에서 유입되는 중복 % 접두사 제거
   if (trimmed.startsWith('%')) {
     trimmed = trimmed.substring(1).trim();
   }
   
   const lower = trimmed.toLowerCase();
-  let result = trimmed;
   
-  // 완전 일치 대조
+  // 단독 시간(초) 단위를 가리키는 영문자의 경우 아포스트로피 's 등과 혼동하지 않도록 단독 완전일치로만 처리
+  if (lower === 's' || lower === 'sec' || lower === 'second' || lower === 'seconds') {
+    return '초';
+  }
+  
+  // 완전 일치 대조 (긴 문장 통째 변환 1순위)
   if (UNIT_MAP[trimmed]) {
-    result = UNIT_MAP[trimmed];
-  } else if (UNIT_MAP[lower]) {
-    result = UNIT_MAP[lower];
-  } else {
-    // 복합 텍스트 부분 치환 (단어 단위 치환)
-    for (const [eng, kor] of Object.entries(UNIT_MAP)) {
-      const regex = new RegExp(`\\b${eng}\\b`, 'gi');
-      result = result.replace(regex, kor);
-    }
+    return UNIT_MAP[trimmed];
+  }
+  if (UNIT_MAP[lower]) {
+    return UNIT_MAP[lower];
+  }
+  
+  // 복합 텍스트 부분 치환 (긴 문자열부터 순차적으로 치환하여 쪼개짐 방지)
+  let result = trimmed;
+  const sortedEntries = Object.entries(UNIT_MAP).sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [eng, kor] of sortedEntries) {
+    const regex = new RegExp(`\\b${eng}\\b`, 'gi');
+    result = result.replace(regex, kor);
   }
   return result;
 }

@@ -5,10 +5,12 @@ const { exec } = require('child_process');
 // 감시할 디렉토리 경로 (프로젝트 루트)
 const watchDir = __dirname;
 
-// 제외할 경로 패턴
+// 제외할 경로 패턴 (윈도우/맥 경로 통일을 위해 슬래시 기준으로 통일하여 대조)
 const excludePatterns = [
-  /[\\/]\.git[\\/]/,
-  /[\\/]node_modules[\\/]/,
+  /\/\.git\//,
+  /\.git$/,
+  /\/node_modules\//,
+  /node_modules$/,
   /git-watcher\.js$/,
   /\.log$/,
   /temp/i
@@ -80,8 +82,11 @@ function watchDirectory(dirPath) {
 
       const fullPath = path.join(dirPath, filename);
 
+      // 모든 경로 구분자를 슬래시로 통일하여 정밀 필터링
+      const normalizedPath = fullPath.replace(/\\/g, '/');
+
       // 제외할 패턴인지 확인
-      const shouldExclude = excludePatterns.some(pattern => pattern.test(fullPath));
+      const shouldExclude = excludePatterns.some(pattern => pattern.test(normalizedPath));
       if (shouldExclude) return;
 
       // 파일 변경 사항 큐에 등록

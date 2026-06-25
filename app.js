@@ -661,18 +661,30 @@ const UNIT_MAP = {
 // 단위/계수 영문 텍스트 번역 함수
 function translateUnit(unitStr) {
   if (!unitStr) return '';
-  const trimmed = unitStr.trim();
+  let trimmed = unitStr.trim();
+  
+  // 단일 % 기호인 경우 그대로 반환
+  if (trimmed === '%') return '%';
+  
+  // Meraki 데이터에서 유입되는 중복 % 접두사 제거 (예: "% bonus health" -> "bonus health")
+  if (trimmed.startsWith('%')) {
+    trimmed = trimmed.substring(1).trim();
+  }
+  
   const lower = trimmed.toLowerCase();
+  let result = trimmed;
   
   // 완전 일치 대조
-  if (UNIT_MAP[trimmed]) return UNIT_MAP[trimmed];
-  if (UNIT_MAP[lower]) return UNIT_MAP[lower];
-  
-  // 복합 텍스트 부분 치환 (예: "of target's missing health" 등 단어 단위 치환)
-  let result = trimmed;
-  for (const [eng, kor] of Object.entries(UNIT_MAP)) {
-    const regex = new RegExp(`\\b${eng}\\b`, 'gi');
-    result = result.replace(regex, kor);
+  if (UNIT_MAP[trimmed]) {
+    result = UNIT_MAP[trimmed];
+  } else if (UNIT_MAP[lower]) {
+    result = UNIT_MAP[lower];
+  } else {
+    // 복합 텍스트 부분 치환 (단어 단위 치환)
+    for (const [eng, kor] of Object.entries(UNIT_MAP)) {
+      const regex = new RegExp(`\\b${eng}\\b`, 'gi');
+      result = result.replace(regex, kor);
+    }
   }
   return result;
 }

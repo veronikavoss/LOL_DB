@@ -88,10 +88,11 @@ async function init() {
     state.version = versions[0]; // 가장 최근 패치 버전
     elements.patchVersion.textContent = `Ver. ${state.version}`;
 
-    // 2. 챔피언 및 아이템 데이터 로드
+    // 2. 챔피언, 아이템 및 Meraki 정밀 스펙 데이터 일괄 사전 로드 (로딩 단계에서 완벽 동기화)
     await Promise.all([
       loadChampions(),
-      loadItems()
+      loadItems(),
+      loadMerakiData()
     ]);
 
     // 3. 이벤트 리스너 바인딩
@@ -345,11 +346,6 @@ async function showChampionDetail(championId) {
     const data = await response.json();
     detailData = data.data[championId];
     state.championDetails[championId] = detailData; // 캐시에 보관
-  }
-
-  // 로컬 Meraki 상세 스펙 데이터 최초 1회 일괄 로드
-  if (!state.merakiChampions) {
-    await loadMerakiData();
   }
 
   // ID 불일치(오공, 누누 등)를 보정하여 100% 완벽 매핑
@@ -1012,13 +1008,12 @@ function translateUnit(unitStr) {
     return UNIT_MAP[lower];
   }
   
-  // 복합 텍스트 부분 치환 (긴 문자열부터 순차적으로 치환하여 쪼개짐 방지)
+  // 복합 텍스트 부분 치환 (정규식 대신 replaceAll을 사용하여 특수 문자 크래시 원천 방지 및 안전성 확보)
   let result = trimmed;
   const sortedEntries = Object.entries(UNIT_MAP).sort((a, b) => b[0].length - a[0].length);
   
   for (const [eng, kor] of sortedEntries) {
-    const regex = new RegExp(`\\b${eng}\\b`, 'gi');
-    result = result.replace(regex, kor);
+    result = result.replaceAll(eng, kor);
   }
   return result;
 }

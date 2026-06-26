@@ -1558,7 +1558,6 @@ function getSkillSpecsHtml(merakiSpell) {
   return hasSpecs ? html : '';
 }
 
-  "target's maximum health": "대상 최대 체력 비례",
   "of target's missing health": "대상 잃은 체력 비례",
   "target's missing health": "대상 잃은 체력 비례",
   "of target's current health": "대상 현재 체력 비례",

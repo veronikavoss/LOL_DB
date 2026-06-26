@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', init);
 // --- Meraki Analytics 스킬 수치 및 계수 연동 모듈 ---
 
 // 한글 맵핑 딕셔너리
-// 한글 맵핑 딕셔너리 (전체 챔피언의 모든 고유 속성 100% 집대성)
+// 전체 챔피언의 모든 고유 속성 100% 집대성 + 패턴 기반 폴백 번역
 const ATTRIBUTE_MAP = {
   "Damage": "피해량",
   "Bonus Physical Damage": "추가 물리 피해",

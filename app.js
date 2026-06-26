@@ -1470,11 +1470,6 @@ function translateUnit(unitStr) {
   // 단일 % 기호인 경우 그대로 반환
   if (trimmed === '%') return '%';
   
-  // Meraki 데이터에서 유입되는 중복 % 접두사 제거
-  if (trimmed.startsWith('%')) {
-    trimmed = trimmed.substring(1).trim();
-  }
-  
   const lower = trimmed.toLowerCase();
   
   // 단독 시간(초) 단위를 가리키는 영문자의 경우 아포스트로피 's 등과 혼동하지 않도록 단독 완전일치로만 처리

@@ -841,12 +841,723 @@ const ATTRIBUTE_MAP = {
   // 기본 단어 대소문자 매핑
   "Physical damage": "물리 피해량",
   "Magic damage": "마법 피해량",
-  "True damage": "고정 피해량"
+  "True damage": "고정 피해량",
+
+  // --- 누락된 전체 속성 일괄 추가 ---
+  "Bonus Health": "추가 체력",
+  "Bonus Health Per Stack": "중첩당 추가 체력",
+  "Bonus Health Regeneration": "추가 체력 재생",
+  "Bonus Magic Damage On-Hit": "적중 시 추가 마법 피해",
+  "Bonus Magic Damage Per Hit": "타격당 추가 마법 피해",
+  "Bonus Magic Damage at Max Stacks": "최대 중첩 시 추가 마법 피해",
+  "Bonus Magic Damage per Stack": "중첩당 추가 마법 피해",
+  "Bonus Magic Resistance per Champion Hit": "챔피언 타격당 추가 마법 저항력",
+  "Bonus Monster Damage": "몬스터 대상 추가 피해",
+  "Bonus Move Speed": "추가 이동 속도",
+  "Bonus Movement Speed Decay": "추가 이동 속도 감쇠",
+  "Bonus Movement Speed Duration": "추가 이동 속도 지속시간",
+  "Bonus Movement Speed per Stack": "중첩당 추가 이동 속도",
+  "Bonus Movement speed": "추가 이동 속도",
+  "Bonus Non-Epic Monster Damage": "비에픽 몬스터 추가 피해",
+  "Bonus Overload Damage": "과부하 추가 피해",
+  "Bonus Physical Damage On-Hit": "적중 시 추가 물리 피해",
+  "Bonus Physical Damage per Hit": "타격당 추가 물리 피해",
+  "Bonus Primary Target Shield": "주 대상 추가 보호막",
+  "Bonus Range": "추가 사거리",
+  "Bonus Resistances": "추가 저항력",
+  "Bonus Shield per Tick": "틱당 추가 보호막",
+  "Bonus Size Per Stack": "중첩당 추가 크기",
+  "Bonus Stats": "추가 능력치",
+  "Bounce Critical Damage": "바운스 치명타 피해",
+  "Bounce Damage": "바운스 피해",
+  "Bounce Distance Cap": "바운스 최대 거리",
+  "Breath of Light Flat Damage Modifier": "빛의 숨결 고정 피해 보정",
+  "Buff Duration": "버프 지속시간",
+  "Bullet Storing Interval Time": "탄환 충전 시간 간격",
+  "Burst Fire Bonus Magic Damage": "점사 추가 마법 피해",
+  "Burst Fire Secondary Target Damage": "점사 보조 대상 피해",
+  "Burst Physical Damage": "폭발 물리 피해",
+  "Capped Healing": "제한된 회복량",
+  "Capped Minion/Monster Health Damage": "미니언/몬스터 체력 피해 제한",
+  "Capped Monster Damage": "몬스터 피해 제한",
+  "Capped Monster Damage per Hit": "몬스터 타격당 피해 제한",
+  "Capped Monster Health Damage": "몬스터 체력 피해 제한",
+  "Capped Non-Champion Damage": "챔피언 제외 대상 피해 제한",
+  "Center Damage per Snip": "중앙 영역 가위질당 피해",
+  "Champion Heal Portion": "챔피언 회복 비율",
+  "Champion Healing": "챔피언 대상 회복량",
+  "Champion Magic Damage": "챔피언 대상 마법 피해",
+  "Champion True Damage": "챔피언 대상 고정 피해",
+  "Chomper Damage": "덫 피해",
+  "Clone Outgoing Damage": "분신 공격 피해",
+  "Collision Physical Damage": "충돌 물리 피해",
+  "Combined Bonus Magic Damage": "결합 추가 마법 피해",
+  "Combined Increased Minion Damage": "미니언 대상 결합 증가 피해",
+  "Combined Primary Monster Damage": "몬스터 대상 결합 기본 피해",
+  "Combined Total Minion Damage": "미니언 대상 결합 총 피해",
+  "Combined Total Non-Minion Damage": "미니언 제외 대상 결합 총 피해",
+  "Cooldown Refund": "재사용 대기시간 환불",
+  "Cripple Strength": "약화 강도",
+  "Critical Physical Damage": "치명타 물리 피해",
+  "Critical damage": "치명타 피해",
+  "Damage Increase": "피해량 증가",
+  "Damage Modifier": "피해량 보정",
+  "Damage Per Second": "초당 피해량",
+  "Damage Per Tick": "틱당 피해량",
+  "Damage Stored": "저장된 피해량",
+  "Damage Stored into Grey Health": "회색 체력으로 저장된 피해량",
+  "Damage Transmission": "피해 전이량",
+  "Damage per Additional Stack": "추가 중첩당 피해량",
+  "Damage per Instance": "적중당 피해량",
+  "Damage per Snip": "가위질당 피해량",
+  "Damage per second": "초당 피해량",
+  "Damage reduction": "피해량 감소",
+  "Damage to target on 67% missing hp": "잃은 체력 67% 대상 피해량",
+  "Damage with A Thousand Cuts": "천 번의 베기 피해량",
+  "Dash Physical Damage": "돌진 물리 피해",
+  "Decayed Bonus Movement Speed": "감쇠된 추가 이동 속도",
+  "Demolition Threshold": "파괴 임계치",
+  "Distance between individual segments": "개별 조각 간 거리",
+  "Distance between outermost segments": "최외곽 조각 간 거리",
+  "Effect Duration": "효과 지속시간",
+  "Empowered Champion Heal": "강화 챔피언 회복량",
+  "Empowered Damage": "강화 피해량",
+  "Empowered Damage per Tick": "강화 틱당 피해량",
+  "Empowered Non-Champion Heal": "강화 비챔피언 회복량",
+  "Empowered Root Duration": "강화 속박 지속시간",
+  "Empowered Slow": "강화 둔화",
+  "Energy Restored": "기력 회복량",
+  "Enhanced Bonus Attack Speed": "강화 추가 공격 속도",
+  "Enhanced Bonus Movement Speed": "강화 추가 이동 속도",
+  "Enhanced Champion Healing": "강화 챔피언 회복량",
+  "Enhanced Damage": "강화 피해량",
+  "Enhanced Damage Per Tick": "강화 틱당 피해량",
+  "Enhanced Healing Cap": "강화 회복량 제한",
+  "Enhanced Magic Resistance Reduction": "강화 마법 저항력 감소",
+  "Enhanced Minion Damage Per Tick": "미니언 대상 강화 틱당 피해",
+  "Enhanced Non-Champion Healing": "비챔피언 대상 강화 회복량",
+  "Enhanced Shield Strength": "강화 보호막 흡수량",
+  "Enhanced Slow": "강화 둔화",
+  "Enhanced damage below threshold": "임계치 이하 강화 피해",
+  "Epicenter Magic Damage": "진앙 마법 피해",
+  "Fear Duration": "공포 지속시간",
+  "Field Magic Damage per Second": "장판 초당 마법 피해",
+  "Field Magic Damage per Tick": "장판 틱당 마법 피해",
+  "Field Minion Magic Damage per Tick": "미니언 대상 장판 틱당 마법 피해",
+  "Final Snip Center Damage": "마지막 가위질 중앙 피해",
+  "Final Snip Damage": "마지막 가위질 피해",
+  "First Cast Damage": "1차 사용 피해",
+  "First Sweetspot Damage": "1타 끝자락 피해",
+  "Flat Damage Reduction": "고정 피해 감소",
+  "Flurry Physical Damage": "연타 물리 피해",
+  "Fracture Magic Damage": "균열 마법 피해",
+  "Full Stack Bonus Damage": "최대 중첩 추가 피해",
+  "Full Stack Physical Damage": "최대 중첩 물리 피해",
+  "Fury Gained": "분노 획득량",
+  "Fury Generation per Second": "초당 분노 생성량",
+  "Gigalodon Damage": "거대 상어 피해",
+  "Glob Physical Damage": "점액 물리 피해",
+  "Gold Plunder": "골드 약탈량",
+  "Guppy Damage": "아기 상어 피해",
+  "HP/Mana Regenerated per 0.5 Seconds": "0.5초당 체력/마나 재생량",
+  "Headshot Damage Increase": "헤드샷 피해 증가",
+  "Heal Per 1 Fury": "분노 1당 회복량",
+  "Heal Per Ally": "아군당 회복량",
+  "Heal Per Tick": "틱당 회복량",
+  "Heal Percentage": "회복 비율",
+  "Heal and Shield Power": "치유 및 보호막 효과",
+  "Heal per Hit": "타격당 회복량",
+  "Heal per Second": "초당 회복량",
+  "Heal per Tick": "틱당 회복량",
+  "Healing Cap": "회복량 제한",
+  "Healing On-Hit": "적중 시 회복량",
+  "Healing Percentage": "회복 비율",
+  "Health Cost Reduction": "체력 소모량 감소",
+  "Health Regenerated per 0.5 Seconds": "0.5초당 체력 재생량",
+  "Hurl Physical Damage": "던지기 물리 피해",
+  "Hurl Secondary Physical Damage": "던지기 보조 물리 피해",
+  "Hyper Bonus Movement Speed": "하이퍼 추가 이동 속도",
+  "Impact Distance to Reveal": "시야 제공 충격 거리",
+  "Increased Attack Speed": "증가된 공격 속도",
+  "Increased Base Health": "증가된 기본 체력",
+  "Increased Blind Duration": "증가된 실명 지속시간",
+  "Increased Bonus Armor": "증가된 추가 방어력",
+  "Increased Bonus Damage": "증가된 추가 피해",
+  "Increased Bonus Magic Damage": "증가된 추가 마법 피해",
+  "Increased Bonus Move Speed": "증가된 추가 이동 속도",
+  "Increased Bonus Movement Speed": "증가된 추가 이동 속도",
+  "Increased Damage Modifier": "증가된 피해 보정",
+  "Increased Damage Stored into Grey Health": "회색 체력 전환 증가 피해",
+  "Increased Damage per Stack": "중첩당 증가 피해",
+  "Increased Heal": "증가된 회복량",
+  "Increased Healing": "증가된 회복량",
+  "Increased Hurl Damage": "증가된 던지기 피해",
+  "Increased Hurl Secondary Damage": "증가된 던지기 보조 피해",
+  "Increased Life Steal": "증가된 생명력 흡수",
+  "Increased Magic Damage": "증가된 마법 피해",
+  "Increased Minimum Damage": "증가된 최소 피해",
+  "Increased Minion Damage": "증가된 미니언 피해",
+  "Increased Mixed Damage": "증가된 혼합 피해",
+  "Increased Modified Damage": "증가된 보정 피해",
+  "Increased Monster Damage": "증가된 몬스터 피해",
+  "Increased Movement Speed": "증가된 이동 속도",
+  "Increased Physical Damage": "증가된 물리 피해",
+  "Increased Shield Strength": "증가된 보호막 흡수량",
+  "Increased Size": "증가된 크기",
+  "Increased Slow": "증가된 둔화",
+  "Increased Stored Damage": "증가된 저장 피해",
+  "Increased Thrust Damage": "증가된 찌르기 피해",
+  "Increased Total Attack Speed": "증가된 총 공격 속도",
+  "Initial Bonus Movement Speed": "초기 추가 이동 속도",
+  "Initial Rocket Damage": "첫 로켓 피해",
+  "Initial Rocket Magic Damage": "첫 로켓 마법 피해",
+  "Initial Shield Strength": "초기 보호막 흡수량",
+  "Invisibility Duration": "투명 지속시간",
+  "Knock Back Distance": "넉백 거리",
+  "Knock Up Duration": "에어본 지속시간",
+  "Last Tick of Damage": "마지막 틱 피해",
+  "Lethality": "치명력",
+  "Life Steal": "생명력 흡수",
+  "Life steal and spell vamp": "생명력 흡수 및 주문 흡혈",
+  "Linger Magic Damage per Tick": "잔류 틱당 마법 피해",
+  "Magic Damage On-Hit": "적중 시 마법 피해",
+  "Magic Damage Per Bolt": "번개당 마법 피해",
+  "Magic Damage Per Cluster": "군집당 마법 피해",
+  "Magic Damage Per Dagger": "단검당 마법 피해",
+  "Magic Damage Per Hit": "타격당 마법 피해",
+  "Magic Damage Per Second": "초당 마법 피해",
+  "Magic Damage Per Wave": "파도당 마법 피해",
+  "Magic Damage Reduction": "마법 피해 감소",
+  "Magic Damage per Explosion": "폭발당 마법 피해",
+  "Magic Damage per Hit": "타격당 마법 피해",
+  "Magic Damage per Mine": "지뢰당 마법 피해",
+  "Magic Damage per Needle": "바늘당 마법 피해",
+  "Magic Damage per Orb": "구체당 마법 피해",
+  "Magic Damage per Sphere": "구체당 마법 피해",
+  "Magic Damage per Tick": "틱당 마법 피해",
+  "Magic Resistance Reduction": "마법 저항력 감소",
+  "Magic Shield Strength": "마법 보호막 흡수량",
+  "Mana Refunded": "마나 환불량",
+  "Mana Restore": "마나 회복량",
+  "Mana Restored": "마나 회복량",
+  "Mana Restored Against Champions": "챔피언 대상 마나 회복량",
+  "Mana Restored per Kill": "처치 시 마나 회복량",
+  "Mark Magic Damage": "표식 마법 피해",
+  "Max Single-Target Monster Damage": "단일 몬스터 대상 최대 피해",
+  "Maximum Attack Speed": "최대 공격 속도",
+  "Maximum Base Damage Increase": "최대 기본 피해 증가",
+  "Maximum Bonus Armor": "최대 추가 방어력",
+  "Maximum Bonus Attack Speed": "최대 추가 공격 속도",
+  "Maximum Bonus Magic Damage": "최대 추가 마법 피해",
+  "Maximum Bonus Magic Damage at Max Stacks": "최대 중첩 시 최대 추가 마법 피해",
+  "Maximum Bonus Magic Damage per Stack": "중첩당 최대 추가 마법 피해",
+  "Maximum Bonus Movement Speed": "최대 추가 이동 속도",
+  "Maximum Bonus Physical Damage": "최대 추가 물리 피해",
+  "Maximum Bonus True Damage": "최대 추가 고정 피해",
+  "Maximum Bullets Stored": "최대 저장 탄환 수",
+  "Maximum Center Damage": "최대 중앙 영역 피해",
+  "Maximum Champion Damage": "챔피언 대상 최대 피해",
+  "Maximum Charges": "최대 충전 횟수",
+  "Maximum Cripple": "최대 약화량",
+  "Maximum Damage Increase": "최대 피해 증가",
+  "Maximum Damage Per Tick": "틱당 최대 피해",
+  "Maximum Damage with Infinity Edge": "무한의 대검 최대 피해",
+  "Maximum Final Bounce Physical Damage": "최종 바운스 최대 물리 피해",
+  "Maximum Fourth Shot Damage": "4번째 총탄 최대 피해",
+  "Maximum Heal": "최대 회복량",
+  "Maximum Heal Per Tick": "틱당 최대 회복량",
+  "Maximum Heal per Tick": "틱당 최대 회복량",
+  "Maximum Increased Damage": "최대 증가 피해",
+  "Maximum Knockup Duration": "최대 에어본 지속시간",
+  "Maximum Magic Damage": "최대 마법 피해",
+  "Maximum Mana Restored": "최대 마나 회복량",
+  "Maximum Minion Damage": "미니언 대상 최대 피해",
+  "Maximum Minion/Monster Damage": "미니언/몬스터 대상 최대 피해",
+  "Maximum Mixed Damage": "최대 혼합 피해",
+  "Maximum Mixed Total Damage with Fire at Will and Death's Daughter": "포격 개시 + 죽음의 여신 최대 혼합 총 피해",
+  "Maximum Monster Damage": "몬스터 대상 최대 피해",
+  "Maximum Monster Damage per hit": "몬스터 대상 타격당 최대 피해",
+  "Maximum Movement Speed": "최대 이동 속도",
+  "Maximum Non-Champion Damage": "비챔피언 대상 최대 피해",
+  "Maximum Non-Minion Non-Sweetspot Damage": "미니언 제외 일반 영역 최대 피해",
+  "Maximum Non-Minion Sweetspot Damage": "미니언 제외 끝자락 최대 피해",
+  "Maximum Number of Traps": "최대 함정 수",
+  "Maximum Physical Damage": "최대 물리 피해",
+  "Maximum Physical Damage per Bullet": "탄환당 최대 물리 피해",
+  "Maximum Physical Damage per hit": "타격당 최대 물리 피해",
+  "Maximum Physical Damage with Infinity Edge": "무한의 대검 최대 물리 피해",
+  "Maximum Range Channel Duration": "최대 사거리 채널링 지속시간",
+  "Maximum Reduced Damage": "최대 감소 피해",
+  "Maximum Secondary Damage": "최대 보조 피해",
+  "Maximum Shield Strength": "최대 보호막 흡수량",
+  "Maximum Single-Target Damage": "단일 대상 최대 피해",
+  "Maximum Slow": "최대 둔화",
+  "Maximum Stacks": "최대 중첩 수",
+  "Maximum Total Bonus AD": "최대 총 추가 AD",
+  "Maximum Total Damage": "최대 총 피해",
+  "Maximum Total Heal": "최대 총 회복량",
+  "Maximum Total Magic Damage": "최대 총 마법 피해",
+  "Maximum Total Monster Damage": "몬스터 대상 최대 총 피해",
+  "Maximum Total Physical Damage": "최대 총 물리 피해",
+  "Maximum True Damage": "최대 고정 피해",
+  "Maximum charges": "최대 충전 횟수",
+  "Minimum Bonus Damage": "최소 추가 피해",
+  "Minimum Bonus Magic Damage": "최소 추가 마법 피해",
+  "Minimum Bonus Physical Damage": "최소 추가 물리 피해",
+  "Minimum Bonus True Damage": "최소 추가 고정 피해",
+  "Minimum Center Damage": "최소 중앙 영역 피해",
+  "Minimum Charged Physical Damage": "최소 충전 물리 피해",
+  "Minimum Damage Mitigated": "최소 피해 감쇠량",
+  "Minimum Damage Per Tick": "틱당 최소 피해",
+  "Minimum Fourth Shot Damage": "4번째 총탄 최소 피해",
+  "Minimum Heal": "최소 회복량",
+  "Minimum Heal Per Tick": "틱당 최소 회복량",
+  "Minimum Heal per Tick": "틱당 최소 회복량",
+  "Minimum Health Threshold": "최소 체력 임계치",
+  "Minimum Mana Restored": "최소 마나 회복량",
+  "Minimum Minion Damage": "미니언 대상 최소 피해",
+  "Minimum Mixed Damage": "최소 혼합 피해",
+  "Minimum Monster Damage": "몬스터 대상 최소 피해",
+  "Minimum Monster Damage per hit": "몬스터 대상 타격당 최소 피해",
+  "Minimum Movement Speed": "최소 이동 속도",
+  "Minimum Physical Damage per Bullet": "탄환당 최소 물리 피해",
+  "Minimum Physical Damage per hit": "타격당 최소 물리 피해",
+  "Minimum Reduced Damage": "최소 감소 피해",
+  "Minimum Secondary Damage": "최소 보조 피해",
+  "Minimum Shield": "최소 보호막",
+  "Minimum Shield Strength": "최소 보호막 흡수량",
+  "Minimum Slow": "최소 둔화",
+  "Minimum Total Damage": "최소 총 피해",
+  "Minimum Total Heal": "최소 총 회복량",
+  "Minimum Total Physical Damage": "최소 총 물리 피해",
+  "Minion Bounce Critical Damage": "미니언 바운스 치명타 피해",
+  "Minion Bounce Damage": "미니언 바운스 피해",
+  "Minion Damage Per Feather": "깃털당 미니언 피해",
+  "Minion Damage Per Shot": "발당 미니언 피해",
+  "Minion Damage Per Tick": "틱당 미니언 피해",
+  "Minion Damage per Explosion": "폭발당 미니언 피해",
+  "Minion Damage per Rocket": "로켓당 미니언 피해",
+  "Minion Heal": "미니언 대상 회복량",
+  "Minion Healing Percentage": "미니언 대상 회복 비율",
+  "Minion and Small Monster Damage": "미니언 및 소형 몬스터 피해",
+  "Minion damage": "미니언 대상 피해",
+  "Mist Walkers": "안개 보행자",
+  "Modified Damage Reduction": "보정 피해 감소",
+  "Modified Magic Damage": "보정 마법 피해",
+  "Modified Minion Damage": "보정 미니언 피해",
+  "Modified Physical Damage": "보정 물리 피해",
+  "Monster Bonus Physical Damage": "몬스터 대상 추가 물리 피해",
+  "Monster Damage Cap": "몬스터 피해 제한",
+  "Monster Damage On-Hit": "몬스터 적중 시 피해",
+  "Monster Damage per Tick": "몬스터 틱당 피해",
+  "Monster Disable Duration": "몬스터 무력화 지속시간",
+  "Monster Healing Percentage": "몬스터 대상 회복 비율",
+  "Monster Magic Damage": "몬스터 대상 마법 피해",
+  "Monster Percent Health Damage Cap": "몬스터 체력 비례 피해 제한",
+  "Monster Physical Damage": "몬스터 대상 물리 피해",
+  "Movement Speed Modifier": "이동 속도 보정",
+  "Non-Champion Bonus Damage": "비챔피언 대상 추가 피해",
+  "Non-Champion Damage": "비챔피언 대상 피해",
+  "Non-Champion Heal": "비챔피언 대상 회복량",
+  "Non-Champion Healing": "비챔피언 대상 회복량",
+  "Non-Champion True Damage": "비챔피언 대상 고정 피해",
+  "Non-Epic Monster Damage": "비에픽 몬스터 피해",
+  "Number of Bolts": "번개 수",
+  "Number of Recasts": "재사용 횟수",
+  "Number of ice segments": "얼음 조각 수",
+  "On-Hit Damage Effectiveness": "적중 피해 유효율",
+  "Orb Magic Damage": "구체 마법 피해",
+  "Orb Minion Magic Damage": "미니언 대상 구체 마법 피해",
+  "Orb Root Duration": "구체 속박 지속시간",
+  "Outer Cone Bonus Damage": "외곽 원뿔 추가 피해",
+  "Passive Bonus Magic Damage": "지속 효과 추가 마법 피해",
+  "Path Duration": "경로 지속시간",
+  "Physical Damage (Blade)": "물리 피해 (검날)",
+  "Physical Damage Per Arrow": "화살당 물리 피해",
+  "Physical Damage Per Dagger": "단검당 물리 피해",
+  "Physical Damage Per Feather": "깃털당 물리 피해",
+  "Physical Damage Per Hit": "타격당 물리 피해",
+  "Physical Damage Per Missile": "미사일당 물리 피해",
+  "Physical Damage Per Shot": "발당 물리 피해",
+  "Physical Damage Per Stack": "중첩당 물리 피해",
+  "Physical Damage Reduction": "물리 피해 감소",
+  "Physical Damage per Hit": "타격당 물리 피해",
+  "Physical Damage per Tick": "틱당 물리 피해",
+  "Reduced Damage": "감소된 피해",
+  "Static Cooldown": "고정 재사용 대기시간",
+  "Taunt Duration": "도발 지속시간",
+  "Total Heal": "총 회복량",
+  "Total Healing": "총 회복량",
+  "Total Slow": "총 둔화",
+  "Total Waves": "총 웨이브 수"
 };
 
-// 단위 및 계수 설명 한글 번역 맵 (Meraki 데이터에 포함된 모든 고유 비례/단위 표현 100% 매핑)
+// 패턴 기반 폴백 번역 함수 (ATTRIBUTE_MAP에 없는 속성도 자동 한글화)
+function translateAttribute(attr) {
+  if (!attr) return '';
+  
+  // 1. 완전 일치 확인
+  if (ATTRIBUTE_MAP[attr]) return ATTRIBUTE_MAP[attr];
+  
+  // 2. 패턴 기반 자동 번역
+  let result = attr;
+  
+  // 단어/구문 치환 테이블 (긴 구문을 먼저 처리)
+  const patterns = [
+    // 복합 구문
+    ["Per Tick", "틱당"], ["per Tick", "틱당"], ["per tick", "틱당"],
+    ["Per Hit", "타격당"], ["per Hit", "타격당"], ["per hit", "타격당"],
+    ["Per Second", "초당"], ["per Second", "초당"], ["per second", "초당"],
+    ["Per Stack", "중첩당"], ["per Stack", "중첩당"], ["per stack", "중첩당"],
+    ["Per Shot", "발당"], ["per Shot", "발당"],
+    ["Per Spin", "회전당"], ["per Spin", "회전당"],
+    ["Per Missile", "미사일당"], ["per Missile", "미사일당"],
+    ["Per Feather", "깃털당"], ["Per Arrow", "화살당"],
+    ["Per Dagger", "단검당"], ["Per Bolt", "번개당"],
+    ["Per Wave", "파도당"], ["Per Pass", "관통당"],
+    ["Per Bullet", "탄환당"], ["per Bullet", "탄환당"],
+    ["Per Flurry", "연타당"], ["Per Cluster", "군집당"],
+    ["Per Explosion", "폭발당"], ["per Explosion", "폭발당"],
+    ["Per Rocket", "로켓당"], ["per Rocket", "로켓당"],
+    ["Per Mine", "지뢰당"], ["per Mine", "지뢰당"],
+    ["Per Packmate", "무리 사냥개당"], ["per Packmate", "무리 사냥개당"],
+    ["Per Needle", "바늘당"], ["Per Orb", "구체당"],
+    ["Per Sphere", "구체당"],
+    ["On-Hit", "적중 시"],
+    ["Vs. 5 Champions", "5인 대상"],
+    ["Vs Monsters", "몬스터 대상"],
+    ["On Champion Hit", "챔피언 적중 시"],
+    ["with Infinity Edge", "무한의 대검 적용"],
+    ["with Fire at Will", "포격 개시 포함"],
+    ["with Death's Daughter", "죽음의 여신 포함"],
+    ["with A Thousand Cuts", "천 번의 베기"],
+    ["below threshold", "임계치 이하"],
+    ["into Grey Health", "회색 체력 전환"],
+    // 대상/위치
+    ["Non-Champion", "비챔피언 대상"], ["Non-Minion", "미니언 제외"],
+    ["Non-Epic Monster", "비에픽 몬스터"],
+    ["Minion/Monster", "미니언/몬스터"],
+    ["Primary Target", "주 대상"],
+    ["Secondary Target", "보조 대상"],
+    ["Single-Target", "단일 대상"],
+    ["Champion", "챔피언 대상"], ["Minion", "미니언 대상"],
+    ["Monster", "몬스터 대상"],
+    // 피해 유형
+    ["Physical Damage", "물리 피해"], ["Magic Damage", "마법 피해"],
+    ["True Damage", "고정 피해"], ["Mixed Damage", "혼합 피해"],
+    ["Bonus Damage", "추가 피해"],
+    // 속성
+    ["Movement Speed", "이동 속도"], ["Attack Speed", "공격 속도"],
+    ["Magic Resistance", "마법 저항력"], ["Magic Resist", "마법 저항력"],
+    ["Shield Strength", "보호막 흡수량"],
+    ["Damage Reduction", "피해 감소"],
+    ["Cooldown", "재사용 대기시간"],
+    // 수식어
+    ["Empowered", "강화"], ["Enhanced", "강화"],
+    ["Maximum", "최대"], ["Minimum", "최소"],
+    ["Increased", "증가된"], ["Reduced", "감소된"],
+    ["Bonus", "추가"], ["Total", "총"],
+    ["Initial", "첫"], ["Subsequent", "이후"],
+    ["Modified", "보정"],
+    // 기본 용어
+    ["Damage", "피해"], ["Shield", "보호막"], ["Heal", "회복"],
+    ["Healing", "회복"], ["Armor", "방어력"],
+    ["Duration", "지속시간"], ["Slow", "둔화"],
+    ["Stun", "기절"], ["Root", "속박"],
+    ["Silence", "침묵"], ["Fear", "공포"],
+    ["Taunt", "도발"],
+    ["Physical", "물리"], ["Magic", "마법"]
+  ];
+  
+  for (const [eng, kor] of patterns) {
+    if (result.includes(eng)) {
+      result = result.replace(new RegExp(eng.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), kor);
+    }
+  }
+  
+  return result;
+}
+
+// 단위 및 계수 설명 한글 번역 맵 (AD, AP는 영어 유지)
 const UNIT_MAP = {
   "of target's maximum health": "대상 최대 체력 비례",
+  "target's maximum health": "대상 최대 체력 비례",
+  "of target's missing health": "대상 잃은 체력 비례",
+  "target's missing health": "대상 잃은 체력 비례",
+  "of target's current health": "대상 현재 체력 비례",
+  "target's current health": "대상 현재 체력 비례",
+  "of target's max health": "대상 최대 체력 비례",
+  "target's max health": "대상 최대 체력 비례",
+  "of target's missing HP": "대상 잃은 체력 비례",
+  "target's missing HP": "대상 잃은 체력 비례",
+  "of target's max HP": "대상 최대 체력 비례",
+  "target's max HP": "대상 최대 체력 비례",
+  "of target's health": "대상 체력 비례",
+  "target's health": "대상 체력 비례",
+  
+  "%  bonus AD": "% 추가 AD",
+  "%  of target's current health": "% 대상 현재 체력 비례",
+  "%  of target's maximum health": "% 대상 최대 체력 비례",
+  "%  of target's missing health": "% 대상 잃은 체력 비례",
+  "%  of the original damage": "% 원래 피해 비례",
+  "%  of the target's maximum health": "% 대상 최대 체력 비례",
+  "% (+ 0.2% per 100 bonus armor) (+ 0.2% per 100 bonus magic resistance) of target's maximum health": "% (+ 100 추가 방어력당 0.2%) (+ 100 추가 마법 저항력당 0.2%) 대상 최대 체력 비례",
+  "% (+ 0.25% per 100 AP) of target's maximum health": "% (+ 100 AP당 0.25%) 대상 최대 체력 비례",
+  "% (+ 0.5% per Feast stack) of target's maximum health": "% (+ 포식 중첩당 0.5%) 대상 최대 체력 비례",
+  "% (+ 0.5% per Mark) of target's missing health": "% (+ 표식당 0.5%) 대상 잃은 체력 비례",
+  "% (+ 0.55% per 100 AP) of the target's maximum health": "% (+ 100 AP당 0.55%) 대상 최대 체력 비례",
+  "% (+ 1 / 1.5 / 2 / 2.5 / 3% per 100 AD) of target's maximum health": "% (+ 100 AD당 1 / 1.5 / 2 / 2.5 / 3%) 대상 최대 체력 비례",
+  "% (+ 1% per mark) of target's current health": "% (+ 표식당 1%) 대상 현재 체력 비례",
+  "% (+ 1.1% per 100 AP) of the target's maximum health": "% (+ 100 AP당 1.1%) 대상 최대 체력 비례",
+  "% (+ 1.5% per 100 AP) of target's maximum health": "% (+ 100 AP당 1.5%) 대상 최대 체력 비례",
+  "% (+ 1.5% per 100 bonus AD) of the target's maximum health": "% (+ 100 추가 AD당 1.5%) 대상 최대 체력 비례",
+  "% (+ 1.5% per Feast stack) of target's maximum health": "% (+ 포식 중첩당 1.5%) 대상 최대 체력 비례",
+  "% (+ 1.5% per mark) of target's current health": "% (+ 표식당 1.5%) 대상 현재 체력 비례",
+  "% (+ 1.6% per 100 bonus armor) (+ 1.6% per 100 bonus magic resistance) of target's maximum health": "% (+ 100 추가 방어력당 1.6%) (+ 100 추가 마법 저항력당 1.6%) 대상 최대 체력 비례",
+  "% (+ 1.65% per 100 AP) of the target's maximum health": "% (+ 100 AP당 1.65%) 대상 최대 체력 비례",
+  "% (+ 2 / 3 / 4 / 5 / 6% per 100 AD) of target's maximum health": "% (+ 100 AD당 2 / 3 / 4 / 5 / 6%) 대상 최대 체력 비례",
+  "% (+ 2% per 100 AP) of target's maximum health": "% (+ 100 AP당 2%) 대상 최대 체력 비례",
+  "% (+ 2% per 100 bonus AD) (+ 0.4% per 100 bonus health) of target's maximum health": "% (+ 100 추가 AD당 2%) (+ 100 추가 체력당 0.4%) 대상 최대 체력 비례",
+  "% (+ 2% per 100 bonus AD) of the target's maximum health": "% (+ 100 추가 AD당 2%) 대상 최대 체력 비례",
+  "% (+ 2% per 100 bonus armor) (+ 2% per 100 bonus magic resistance) of target's maximum health": "% (+ 100 추가 방어력당 2%) (+ 100 추가 마법 저항력당 2%) 대상 최대 체력 비례",
+  "% (+ 2%) (+ 0.75% (+ 0.2%) per Mark) of target's missing health": "% (+ 2%) (+ 표식당 0.75% (+ 0.2%)) 대상 잃은 체력 비례",
+  "% (+ 2.5% per 100 AP) of target's maximum health": "% (+ 100 AP당 2.5%) 대상 최대 체력 비례",
+  "% (+ 2.5% per 100 bonus AD) of the target's missing health": "% (+ 100 추가 AD당 2.5%) 대상 잃은 체력 비례",
+  "% (+ 2.75% per 100 AP) of the target's maximum health": "% (+ 100 AP당 2.75%) 대상 최대 체력 비례",
+  "% (+ 2.75% per 100 bonus AD) of the target's missing health": "% (+ 100 추가 AD당 2.75%) 대상 잃은 체력 비례",
+  "% (+ 25% per 100 bonus AD) of expended Grit": "% (+ 100 추가 AD당 25%) 소모한 투지 비례",
+  "% (+ 3% per 100 AP) of target's current health": "% (+ 100 AP당 3%) 대상 현재 체력 비례",
+  "% (+ 3% per 100 AP) of target's maximum health": "% (+ 100 AP당 3%) 대상 최대 체력 비례",
+  "% (+ 3% per 100 AP) of target's missing health": "% (+ 100 AP당 3%) 대상 잃은 체력 비례",
+  "% (+ 3% per 100 bonus AD) of the target's maximum health": "% (+ 100 추가 AD당 3%) 대상 최대 체력 비례",
+  "% (+ 3.3% per 100 AP) of the target's maximum health": "% (+ 100 AP당 3.3%) 대상 최대 체력 비례",
+  "% (+ 3.6% per 100 bonus armor) (+ 3.6% per 100 bonus magic resistance) of target's maximum health": "% (+ 100 추가 방어력당 3.6%) (+ 100 추가 마법 저항력당 3.6%) 대상 최대 체력 비례",
+  "% (+ 4% per 100 bonus AD) of the target's maximum health": "% (+ 100 추가 AD당 4%) 대상 최대 체력 비례",
+  "% (+ 4.5% per 100 AP) of target's maximum health": "% (+ 100 AP당 4.5%) 대상 최대 체력 비례",
+  "% (+ 4.95% per 100 AP) of the target's maximum health": "% (+ 100 AP당 4.95%) 대상 최대 체력 비례",
+  "% (+ 6% per 100 AP) of target's maximum health": "% (+ 100 AP당 6%) 대상 최대 체력 비례",
+  "% (+ 7% per 100 AP) of the target's maximum health": "% (+ 100 AP당 7%) 대상 최대 체력 비례",
+  "% AD": "% AD",
+  "% AP": "% AP",
+  "% AP per 100 bonus health": "% AP (100 추가 체력당)",
+  "% armor": "% 방어력",
+  "% bonus AD": "% 추가 AD",
+  "% bonus armor": "% 추가 방어력",
+  "% bonus health": "% 추가 체력",
+  "% bonus magic resistance": "% 추가 마법 저항력",
+  "% bonus mana": "% 추가 마나",
+  "% bonus movement speed": "% 추가 이동 속도",
+  "% life steal": "% 생명력 흡수",
+  "% maximum health": "% 최대 체력",
+  "% maximum mana": "% 최대 마나",
+  "% missing health": "% 잃은 체력",
+  "% of Braum's maximum health": "% 브라움 최대 체력 비례",
+  "% of Ivern's AP": "% 아이번 AP 비례",
+  "% of Siphoning Strike stacks": "% 흡수의 일격 중첩 비례",
+  "% of Sona's AP": "% 소나 AP 비례",
+  "% of Taric's armor": "% 타릭 방어력 비례",
+  "% of Zac's maximum health": "% 자크 최대 체력 비례",
+  "% of damage dealt": "% 가한 피해량 비례",
+  "% of damage stored": "% 저장된 피해량 비례",
+  "% of her maximum health": "% 최대 체력 비례",
+  "% of his bonus health": "% 추가 체력 비례",
+  "% of his maximum health": "% 최대 체력 비례",
+  "% of his missing health": "% 잃은 체력 비례",
+  "% of maximum health": "% 최대 체력 비례",
+  "% of missing health": "% 잃은 체력 비례",
+  "% of missing mana": "% 잃은 마나 비례",
+  "% of primary target's bonus health": "% 주 대상 추가 체력 비례",
+  "% of target's armor": "% 대상 방어력 비례",
+  "% of target's current health": "% 대상 현재 체력 비례",
+  "% of target's maximum health": "% 대상 최대 체력 비례",
+  "% of target's missing health": "% 대상 잃은 체력 비례",
+  "% of the target's maximum health": "% 대상 최대 체력 비례",
+  "% of turret's maximum health": "% 포탑 최대 체력 비례",
+  "% per 1% of health lost in the past 4 seconds": "% (지난 4초간 잃은 체력 1%당)",
+  "% per 100 AD": "% (100 AD당)",
+  "% per 100 AP": "% (100 AP당)",
+  "% per 100 Pantheon's bonus health": "% (판테온 추가 체력 100당)",
+  "% per 100 bonus AD": "% (100 추가 AD당)",
+  "% per 100 bonus health": "% (100 추가 체력당)",
+  "% per 100 bonus magic resistance": "% (100 추가 마법 저항력당)",
+  "% per 100 of Sona's AP": "% (소나 AP 100당)",
+  "% per 100% bonus attack speed": "% (100% 추가 공격 속도당)",
+  "% total armor": "% 총 방어력",
+  "% total magic resistance": "% 총 마법 저항력",
+  "(+ (3.1% Stardust)% of target's maximum health": "(+ (성가루 3.1%)% 대상 최대 체력 비례)",
+  "(+ 3.5% AP) per Overwhelm stack on the target": "(+ 3.5% AP) 대상의 압도 중첩당",
+  "+ 0.3 per 100% bonus attack speed": "+ 0.3 (100% 추가 공격 속도당)",
+  
+  "based on critical strike chance": "치명타 확률 비례",
+  "chunks of ice": "얼음 조각",
+  "per 1% missing health": "잃은 체력 1%당",
+  "per 4% critical strike chance": "치명타 확률 4%당",
+  "per Mist collected": "수집한 안개 중첩당",
+  "per Soul collected": "수집한 영혼 중첩당",
+  "seconds": "초",
+  "soldiers": "모래 병사",
+  "units": "유닛",
+
+  "bonus health": "추가 체력",
+  "maximum health": "최대 체력",
+  "max health": "최대 체력",
+  "missing health": "잃은 체력",
+  "bonus AD": "추가 AD",
+  "total AD": "총 AD",
+  "AD": "AD",
+  "AP": "AP",
+  "armor": "방어력",
+  "magic resist": "마법 저항력",
+  "bonus armor": "추가 방어력",
+  "bonus magic resist": "추가 마법 저항력",
+  "mana": "마나",
+  "energy": "기력"
+};
+
+// 단위/계수 영문 텍스트 번역 함수
+function translateUnit(unitStr) {
+  if (!unitStr) return '';
+  let trimmed = unitStr.trim();
+  
+  // 단일 % 기호인 경우 그대로 반환
+  if (trimmed === '%') return '%';
+  
+  // Meraki 데이터에서 유입되는 중복 % 접두사 제거
+  if (trimmed.startsWith('%')) {
+    trimmed = trimmed.substring(1).trim();
+  }
+  
+  const lower = trimmed.toLowerCase();
+  
+  // 단독 시간(초) 단위를 가리키는 영문자의 경우 아포스트로피 's 등과 혼동하지 않도록 단독 완전일치로만 처리
+  if (lower === 's' || lower === 'sec' || lower === 'second' || lower === 'seconds') {
+    return '초';
+  }
+  
+  // 완전 일치 대조 (긴 문장 통째 변환 1순위)
+  if (UNIT_MAP[trimmed]) {
+    return UNIT_MAP[trimmed];
+  }
+  if (UNIT_MAP[lower]) {
+    return UNIT_MAP[lower];
+  }
+  
+  // 복합 텍스트 부분 치환 (replaceAll로 특수 문자 크래시 방지)
+  let result = trimmed;
+  const sortedEntries = Object.entries(UNIT_MAP).sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [eng, kor] of sortedEntries) {
+    result = result.replaceAll(eng, kor);
+  }
+  return result;
+}
+
+// 로컬에 보관된 Meraki 스펙 데이터를 최초 1회 일괄 로드 (CORS 및 속도제한 완벽 해결)
+async function loadMerakiData() {
+  try {
+    const response = await fetch('champions.json');
+    if (!response.ok) throw new Error('로컬 스펙 데이터 로드 실패');
+    state.merakiChampions = await response.json();
+    console.log('로컬 챔피언 스펙 데이터 로드 완료');
+  } catch (error) {
+    console.warn('로컬 스펙 데이터 로드 실패 (계수가 생략될 수 있습니다):', error);
+  }
+}
+
+// DDragon ID와 Meraki 챔피언 Key 간의 불일치를 보정해주는 매핑 함수
+function findMerakiChampion(championId, detailData) {
+  if (!state.merakiChampions) return null;
+  
+  // 1. DDragon ID로 직접 찾기 (예: Garen, Ahri)
+  if (state.merakiChampions[championId]) {
+    return state.merakiChampions[championId];
+  }
+  
+  // 2. 대소문자 무관 대조하여 찾기
+  const lowerId = championId.toLowerCase();
+  const foundKey = Object.keys(state.merakiChampions).find(k => k.toLowerCase() === lowerId);
+  if (foundKey) {
+    return state.merakiChampions[foundKey];
+  }
+
+  // 3. 고유 숫자 ID 대조하여 찾기 (가장 정확함 - 오공 MonkeyKing "62" 등 매핑 성공)
+  const numericKey = parseInt(detailData.key);
+  const foundByNumericKey = Object.values(state.merakiChampions).find(c => c.id === numericKey);
+  if (foundByNumericKey) {
+    return foundByNumericKey;
+  }
+
+  // 4. 한글 이름 또는 영문명 매칭 Fallback
+  const foundByName = Object.values(state.merakiChampions).find(c => c.name.toLowerCase() === detailData.name.toLowerCase());
+  if (foundByName) {
+    return foundByName;
+  }
+  
+  return null;
+}
+
+// 스킬의 기본 스펙 및 계수 HTML 생성
+function getSkillSpecsHtml(merakiSpell) {
+  if (!merakiSpell || !merakiSpell.effects || merakiSpell.effects.length === 0) return '';
+  
+  let html = '<div class="skill-specs-box">';
+  let hasSpecs = false;
+
+  merakiSpell.effects.forEach(effect => {
+    if (effect.leveling && effect.leveling.length > 0) {
+      effect.leveling.forEach(lvl => {
+        // ATTRIBUTE_MAP 우선 조회 → 없으면 패턴 기반 자동 번역
+        const attrName = translateAttribute(lvl.attribute);
+        const modifiers = lvl.modifiers;
+        
+        if (modifiers && modifiers.length > 0) {
+          hasSpecs = true;
+          
+          // 기본 수치들 (스킬 레벨별)
+          const baseValues = modifiers[0].values.map(v => Math.round(v * 100) / 100).join(' / ');
+          const baseUnit = translateUnit(modifiers[0].units[0] || '');
+          
+          // 계수 수치들 (AD, AP, 추가 체력 등)
+          let scalingStr = '';
+          if (modifiers.length > 1) {
+            const scalings = modifiers.slice(1).map(mod => {
+              const val = Math.round(mod.values[0] * 100) / 100;
+              const unit = mod.units[0] || '';
+              const translatedUnit = translateUnit(unit);
+              
+              // AD, AP, HP 등 계수 명칭 포맷팅 및 타입 분류
+              let scaleType = 'other';
+              const lowerUnit = unit.toLowerCase();
+              
+              if (lowerUnit.includes('ad')) {
+                scaleType = 'ad';
+              } else if (lowerUnit.includes('ap')) {
+                scaleType = 'ap';
+              } else if (lowerUnit.includes('health') || lowerUnit.includes('hp')) {
+                scaleType = 'hp';
+              }
+              
+              return `<span class="scaling-ratio scaling-${scaleType}">(+ ${val}% ${translatedUnit})</span>`;
+            }).join(' ');
+            
+            scalingStr = ` ${scalings}`;
+          }
+          
+          html += `
+            <div class="spec-line">
+              <span class="spec-attr">${attrName}</span>
+              <span class="spec-val">${baseValues}${baseUnit}${scalingStr}</span>
+            </div>
+          `;
+        }
+      });
+    }
+  });
+
+  html += '</div>';
+  return hasSpecs ? html : '';
+}
+
   "target's maximum health": "대상 최대 체력 비례",
   "of target's missing health": "대상 잃은 체력 비례",
   "target's missing health": "대상 잃은 체력 비례",

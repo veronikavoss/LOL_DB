@@ -32,4 +32,5 @@ Object.values(data).forEach(c => {
 
 const missing = [...attrs].filter(a => !ATTR[a]).sort();
 console.log('Still missing:', missing.length);
-missing.forEach(m => console.log(m));
+// Print all on single lines for complete listing
+missing.forEach(m => console.log(JSON.stringify(m)));

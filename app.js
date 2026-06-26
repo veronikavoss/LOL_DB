@@ -1563,7 +1563,37 @@ function getSkillSpecsHtml(merakiSpell) {
           
           // 기본 수치들 (스킬 레벨별)
           const baseValues = modifiers[0].values.map(v => Math.round(v * 100) / 100).join(' / ');
-          const baseUnit = translateUnit(modifiers[0].units[0] || '');
+          const rawBaseUnit = modifiers[0].units[0] || '';
+          let baseUnit = translateUnit(rawBaseUnit);
+          
+          // 베이스 유닛 포맷팅 (색상 및 띄어쓰기)
+          if (baseUnit) {
+            // 앞에 '%'가 오면 띄어쓰기 확보, 텍스트가 오면 띄어쓰기 확보
+            if (baseUnit.startsWith('%')) {
+              baseUnit = '% ' + baseUnit.substring(1).trim();
+            } else if (!baseUnit.startsWith(' ')) {
+              baseUnit = ' ' + baseUnit;
+            }
+            
+            const lowerRawBase = rawBaseUnit.toLowerCase();
+            let baseScaleType = '';
+            if (lowerRawBase.includes('health') || lowerRawBase.includes('hp')) {
+              baseScaleType = 'scaling-hp';
+            } else if (lowerRawBase.includes('ad') || lowerRawBase.includes('attack damage')) {
+              baseScaleType = 'scaling-ad';
+            } else if (lowerRawBase.includes('ap') || lowerRawBase.includes('ability power')) {
+              baseScaleType = 'scaling-ap';
+            }
+            
+            // 색상을 입히기 위해 span으로 감싸기
+            if (baseScaleType) {
+              if (baseUnit.startsWith('% ')) {
+                baseUnit = '% <span class="' + baseScaleType + '">' + baseUnit.substring(2) + '</span>';
+              } else {
+                baseUnit = ' <span class="' + baseScaleType + '">' + baseUnit.substring(1).trim() + '</span>';
+              }
+            }
+          }
           
           // 계수 수치들 (AD, AP, 추가 체력 등)
           let scalingStr = '';
@@ -1585,7 +1615,12 @@ function getSkillSpecsHtml(merakiSpell) {
                 scaleType = 'hp';
               }
               
-              return `<span class="scaling-ratio scaling-${scaleType}">(+ ${val}% ${translatedUnit})</span>`;
+              let cleanTranslated = translatedUnit;
+              if (cleanTranslated.startsWith('%')) {
+                cleanTranslated = cleanTranslated.replace(/^%\s*/, '');
+              }
+              
+              return `<span class="scaling-ratio scaling-${scaleType}">(+ ${val}% ${cleanTranslated})</span>`;
             }).join(' ');
             
             scalingStr = ` ${scalings}`;

@@ -64,7 +64,10 @@
           <!-- 소환사 검색 폼 -->
           <div class="match-search-form">
             <div class="match-search-input-wrap">
-              <input type="text" id="match-search-input" placeholder="소환사명#태그 (예: Hide on bush#KR1)" autocomplete="off">
+              <div class="match-input-container">
+                <input type="text" id="match-search-input" placeholder="소환사명#태그 (예: Hide on bush#KR1)" autocomplete="off">
+                <div id="match-autocomplete-list" class="match-autocomplete-list hidden"></div>
+              </div>
               <button id="match-search-btn" class="match-search-btn">검색</button>
             </div>
           </div>

@@ -1834,6 +1834,9 @@ async function searchSummoner(gameName, tagLine) {
   // 프로필 렌더링
   renderMatchProfile();
 
+  // 검색 성공 시 최근 검색어에 저장
+  saveRecentSearch(accountData.gameName, accountData.tagLine);
+
   // 4. Match-V5: 최근 20매치 ID 로드
   await loadMatchHistory(accountData.puuid);
 }

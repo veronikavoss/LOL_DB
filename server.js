@@ -60,11 +60,11 @@ app.get('/api/riot/summoner/:puuid', async (req, res) => {
   }
 });
 
-// 3. 소환사ID → 랭크 정보 (League-V4)
-app.get('/api/riot/league/:summonerId', async (req, res) => {
+// 3. PUUID → 랭크 정보 (League-V4)
+app.get('/api/riot/league/:puuid', async (req, res) => {
   try {
-    const { summonerId } = req.params;
-    const url = `https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`;
+    const { puuid } = req.params;
+    const url = `https://kr.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`;
     const data = await riotApiRequest(url);
     res.json(data);
   } catch (error) {

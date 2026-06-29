@@ -1817,8 +1817,8 @@ async function searchSummoner(gameName, tagLine) {
   if (!summonerRes.ok) throw new Error('소환사 정보를 가져올 수 없습니다.');
   const summonerData = await summonerRes.json();
 
-  // 3. League-V4: 소환사ID → 랭크 정보
-  const leagueRes = await fetch(`/api/riot/league/${summonerData.id}`);
+  // 3. League-V4: PUUID → 랭크 정보
+  const leagueRes = await fetch(`/api/riot/league/${accountData.puuid}`);
   const leagueData = leagueRes.ok ? await leagueRes.json() : [];
 
   // 프로필 저장

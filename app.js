@@ -1759,13 +1759,15 @@ async function handleMatchSearch() {
   const input = elements.matchSearchInput.value.trim();
   if (!input || state.matchSearching) return;
 
-  // 소환사명#태그 파싱
-  const parts = input.split('#');
-  if (parts.length < 2 || !parts[1].trim()) {
-    alert('소환사명#태그 형식으로 입력해주세요.\n예: Hide on bush#KR1');
-    return;
+  // 소환사명#태그 파싱 (태그가 없으면 기본값 #KR1 자동 추가)
+  let query = input;
+  if (!query.includes('#')) {
+    query += '#KR1';
+    // 사용자가 입력창에서도 추가된 태그를 볼 수 있도록 업데이트
+    elements.matchSearchInput.value = query;
   }
 
+  const parts = query.split('#');
   const gameName = parts[0].trim();
   const tagLine = parts.slice(1).join('#').trim();
 

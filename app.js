@@ -210,9 +210,30 @@ function setupEventListeners() {
   });
 
   // 전적 검색 이벤트
-  elements.matchSearchBtn.addEventListener('click', () => handleMatchSearch());
+  elements.matchSearchBtn.addEventListener('click', () => {
+    hideAutocomplete();
+    handleMatchSearch();
+  });
   elements.matchSearchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleMatchSearch();
+    if (e.key === 'Enter') {
+      hideAutocomplete();
+      handleMatchSearch();
+    }
+  });
+
+  // 자동완성 드롭다운 이벤트
+  elements.matchSearchInput.addEventListener('focus', () => {
+    showAutocomplete();
+  });
+  elements.matchSearchInput.addEventListener('input', () => {
+    showAutocomplete();
+  });
+
+  // 외부 클릭 시 자동완성 닫기
+  document.addEventListener('click', (e) => {
+    if (!elements.matchSearchInput.contains(e.target) && !elements.matchAutocompleteList.contains(e.target)) {
+      hideAutocomplete();
+    }
   });
 }
 

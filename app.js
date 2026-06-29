@@ -1,18 +1,24 @@
-console.log('DEX app.js v1.0.3 loaded');
+console.log('DEX app.js v3.0.0 loaded');
 
 // 글로벌 상태 객체
 const state = {
   version: '14.3.1', // 초기값, api 통신 후 동적으로 갱신됨
   champions: [],
   items: [],
-  currentTab: 'champions', // 'champions' | 'items'
+  currentTab: 'champions', // 'champions' | 'items' | 'match'
   searchQuery: '',
   activeFilter: 'ALL',
   selectedId: null,
   // 챔피언 상세 정보 캐시
   championDetails: {},
   // 로컬 로드된 챔피언 상세 스펙 캐시
-  merakiChampions: null
+  merakiChampions: null,
+  // 전적 검색 관련
+  summonerProfile: null,   // { puuid, gameName, tagLine, summonerLevel, profileIconId, summonerId, ranks[] }
+  matchIds: [],            // 매치 ID 배열
+  matchDetails: {},        // { matchId: matchData } 캐시
+  selectedMatchId: null,   // 선택된 매치 ID
+  matchSearching: false    // 검색 진행 중 플래그
 };
 
 // 역할군 영문 -> 국문 매핑
@@ -69,12 +75,24 @@ const elements = {
   patchVersion: document.getElementById('patch-version'),
   tabChampions: document.getElementById('tab-champions'),
   tabItems: document.getElementById('tab-items'),
+  tabMatch: document.getElementById('tab-match'),
   searchInput: document.getElementById('search-input'),
   clearSearchBtn: document.getElementById('clear-search-btn'),
   filterGroup: document.getElementById('filter-group'),
   listGrid: document.getElementById('list-grid'),
   emptyDetailState: document.getElementById('empty-detail-state'),
-  detailContentArea: document.getElementById('detail-content-area')
+  detailContentArea: document.getElementById('detail-content-area'),
+  // 도감 섹션 (탭 전환 시 숨기기/보이기)
+  listSection: document.querySelector('.list-section'),
+  detailPanel: document.getElementById('detail-panel'),
+  // 전적 검색 섹션
+  matchSection: document.getElementById('match-section'),
+  matchSearchInput: document.getElementById('match-search-input'),
+  matchSearchBtn: document.getElementById('match-search-btn'),
+  summonerProfile: document.getElementById('summoner-profile'),
+  matchList: document.getElementById('match-list'),
+  matchEmptyState: document.getElementById('match-empty-state'),
+  matchDetailContent: document.getElementById('match-detail-content')
 };
 
 // 초기화
@@ -169,6 +187,7 @@ function setupEventListeners() {
   // 탭 클릭
   elements.tabChampions.addEventListener('click', () => switchTab('champions'));
   elements.tabItems.addEventListener('click', () => switchTab('items'));
+  elements.tabMatch.addEventListener('click', () => switchTab('match'));
 
   // 검색 입력
   elements.searchInput.addEventListener('input', (e) => {
@@ -189,6 +208,12 @@ function setupEventListeners() {
     renderList();
     elements.searchInput.focus();
   });
+
+  // 전적 검색 이벤트
+  elements.matchSearchBtn.addEventListener('click', () => handleMatchSearch());
+  elements.matchSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleMatchSearch();
+  });
 }
 
 // 탭 전환
@@ -202,23 +227,38 @@ function switchTab(tab) {
   elements.searchInput.value = '';
   elements.clearSearchBtn.style.display = 'none';
 
-  // 버튼 스타일 업데이트
-  if (tab === 'champions') {
-    elements.tabChampions.classList.add('active');
-    elements.tabItems.classList.remove('active');
-    elements.searchInput.placeholder = '챔피언 이름을 입력하여 검색...';
+  // 모든 탭 버튼 비활성화
+  elements.tabChampions.classList.remove('active');
+  elements.tabItems.classList.remove('active');
+  elements.tabMatch.classList.remove('active');
+
+  if (tab === 'match') {
+    // 전적 검색 탭: 도감 영역 숨기고 전적 영역 표시
+    elements.tabMatch.classList.add('active');
+    elements.listSection.classList.add('hidden');
+    elements.detailPanel.classList.add('hidden');
+    elements.matchSection.classList.remove('hidden');
   } else {
-    elements.tabItems.classList.add('active');
-    elements.tabChampions.classList.remove('active');
-    elements.searchInput.placeholder = '아이템 이름을 입력하여 검색...';
+    // 챔피언/아이템 탭: 전적 영역 숨기고 도감 영역 표시
+    elements.matchSection.classList.add('hidden');
+    elements.listSection.classList.remove('hidden');
+    elements.detailPanel.classList.remove('hidden');
+
+    if (tab === 'champions') {
+      elements.tabChampions.classList.add('active');
+      elements.searchInput.placeholder = '챔피언 이름을 입력하여 검색...';
+    } else {
+      elements.tabItems.classList.add('active');
+      elements.searchInput.placeholder = '아이템 이름을 입력하여 검색...';
+    }
+
+    // 뷰 초기화
+    elements.emptyDetailState.classList.remove('hidden');
+    elements.detailContentArea.classList.add('hidden');
+
+    renderFilters();
+    renderList();
   }
-
-  // 뷰 초기화
-  elements.emptyDetailState.classList.remove('hidden');
-  elements.detailContentArea.classList.add('hidden');
-
-  renderFilters();
-  renderList();
 }
 
 // 필터 영역 렌더링
@@ -1634,4 +1674,441 @@ function getSkillSpecsHtml(merakiSpell) {
 
   html += '</div>';
   return hasSpecs ? html : '';
+}
+
+// ===========================
+// 전적 검색 기능
+// ===========================
+
+// 큐 타입 ID → 한글 이름
+const QUEUE_MAP = {
+  420: '솔로 랭크',
+  440: '자유 랭크',
+  430: '일반',
+  450: '칼바람 나락',
+  490: '일반 (빠른 대전)',
+  400: '일반',
+  700: '격전',
+  720: '격전',
+  830: 'AI 대전 (입문)',
+  840: 'AI 대전 (초보)',
+  850: 'AI 대전 (중급)',
+  900: 'URF',
+  1020: '단일 챔피언',
+  1300: '돌격 넥서스',
+  1400: '궁극기 주문서',
+  1700: '아레나',
+  1710: '아레나',
+  1900: 'URF',
+  0: '커스텀'
+};
+
+function getQueueName(queueId) {
+  return QUEUE_MAP[queueId] || '기타';
+}
+
+// 게임 시간 포맷팅
+function formatGameDuration(seconds) {
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  return `${min}분 ${sec}초`;
+}
+
+// 랭크 티어 한글 변환
+const TIER_MAP = {
+  'IRON': '아이언',
+  'BRONZE': '브론즈',
+  'SILVER': '실버',
+  'GOLD': '골드',
+  'PLATINUM': '플래티넘',
+  'EMERALD': '에메랄드',
+  'DIAMOND': '다이아몬드',
+  'MASTER': '마스터',
+  'GRANDMASTER': '그랜드마스터',
+  'CHALLENGER': '챌린저'
+};
+
+function getTierName(tier) {
+  return TIER_MAP[tier] || tier;
+}
+
+// 전적 검색 핸들러
+async function handleMatchSearch() {
+  const input = elements.matchSearchInput.value.trim();
+  if (!input || state.matchSearching) return;
+
+  // 소환사명#태그 파싱
+  const parts = input.split('#');
+  if (parts.length < 2 || !parts[1].trim()) {
+    alert('소환사명#태그 형식으로 입력해주세요.\n예: Hide on bush#KR1');
+    return;
+  }
+
+  const gameName = parts[0].trim();
+  const tagLine = parts.slice(1).join('#').trim();
+
+  state.matchSearching = true;
+  elements.matchSearchBtn.disabled = true;
+  elements.matchSearchBtn.textContent = '검색 중...';
+
+  // 프로필 영역에 로딩 표시
+  elements.summonerProfile.classList.remove('hidden');
+  elements.summonerProfile.innerHTML = `
+    <div class="match-loading">
+      <div class="spinner"></div>
+      <p>소환사 정보를 불러오는 중...</p>
+    </div>
+  `;
+  elements.matchList.innerHTML = '';
+  elements.matchEmptyState.classList.add('hidden');
+  elements.matchDetailContent.classList.add('hidden');
+
+  try {
+    await searchSummoner(gameName, tagLine);
+  } catch (error) {
+    console.error('전적 검색 오류:', error);
+    elements.summonerProfile.innerHTML = `
+      <div class="match-error">
+        <p>❌ ${error.message || '소환사를 찾을 수 없습니다.'}</p>
+        <p style="font-size:12px; margin-top:8px; color:var(--text-sub);">소환사명#태그를 다시 확인해주세요.</p>
+      </div>
+    `;
+  } finally {
+    state.matchSearching = false;
+    elements.matchSearchBtn.disabled = false;
+    elements.matchSearchBtn.textContent = '검색';
+  }
+}
+
+// 소환사 검색 (Account → Summoner → League → Matches)
+async function searchSummoner(gameName, tagLine) {
+  // 1. Account-V1: 소환사명#태그 → PUUID
+  const accountRes = await fetch(`/api/riot/account/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`);
+  if (!accountRes.ok) {
+    const err = await accountRes.json().catch(() => ({}));
+    throw new Error(accountRes.status === 404 ? '소환사를 찾을 수 없습니다.' : (err.error || 'Account API 오류'));
+  }
+  const accountData = await accountRes.json();
+
+  // 2. Summoner-V4: PUUID → 소환사 프로필
+  const summonerRes = await fetch(`/api/riot/summoner/${accountData.puuid}`);
+  if (!summonerRes.ok) throw new Error('소환사 정보를 가져올 수 없습니다.');
+  const summonerData = await summonerRes.json();
+
+  // 3. League-V4: 소환사ID → 랭크 정보
+  const leagueRes = await fetch(`/api/riot/league/${summonerData.id}`);
+  const leagueData = leagueRes.ok ? await leagueRes.json() : [];
+
+  // 프로필 저장
+  state.summonerProfile = {
+    puuid: accountData.puuid,
+    gameName: accountData.gameName,
+    tagLine: accountData.tagLine,
+    summonerLevel: summonerData.summonerLevel,
+    profileIconId: summonerData.profileIconId,
+    summonerId: summonerData.id,
+    ranks: leagueData
+  };
+
+  // 프로필 렌더링
+  renderMatchProfile();
+
+  // 4. Match-V5: 최근 20매치 ID 로드
+  await loadMatchHistory(accountData.puuid);
+}
+
+// 프로필 영역 렌더링
+function renderMatchProfile() {
+  const p = state.summonerProfile;
+  if (!p) return;
+
+  const iconUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/profileicon/${p.profileIconId}.png`;
+
+  // 랭크 정보
+  const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
+  const flexRank = p.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
+
+  function rankHtml(rank, label) {
+    if (!rank) {
+      return `
+        <div class="rank-badge">
+          <div>
+            <div class="rank-type">${label}</div>
+            <div class="rank-tier" style="color:var(--text-sub);">Unranked</div>
+          </div>
+        </div>
+      `;
+    }
+    const wins = rank.wins;
+    const losses = rank.losses;
+    const total = wins + losses;
+    const winrate = total > 0 ? Math.round((wins / total) * 100) : 0;
+    return `
+      <div class="rank-badge">
+        <div>
+          <div class="rank-type">${label}</div>
+          <div class="rank-tier">${getTierName(rank.tier)} ${rank.rank}</div>
+          <div class="rank-lp">${rank.leaguePoints} LP</div>
+          <div class="rank-winrate">${wins}승 ${losses}패 (${winrate}%)</div>
+        </div>
+      </div>
+    `;
+  }
+
+  elements.summonerProfile.classList.remove('hidden');
+  elements.summonerProfile.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-icon-wrap">
+        <img src="${iconUrl}" alt="프로필 아이콘">
+        <span class="profile-level">${p.summonerLevel}</span>
+      </div>
+      <div class="profile-info">
+        <h2>${p.gameName}</h2>
+        <span class="profile-tag">#${p.tagLine}</span>
+      </div>
+    </div>
+    <div class="profile-ranks">
+      ${rankHtml(soloRank, '솔로 랭크')}
+      ${rankHtml(flexRank, '자유 랭크')}
+    </div>
+  `;
+}
+
+// 매치 히스토리 로드
+async function loadMatchHistory(puuid) {
+  // 로딩 표시
+  elements.matchList.innerHTML = `
+    <div class="match-loading">
+      <div class="spinner"></div>
+      <p>전적을 불러오는 중...</p>
+    </div>
+  `;
+
+  // 매치 ID 목록 가져오기
+  const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?count=20`);
+  if (!matchIdsRes.ok) throw new Error('매치 목록을 가져올 수 없습니다.');
+  const matchIds = await matchIdsRes.json();
+  state.matchIds = matchIds;
+
+  if (matchIds.length === 0) {
+    elements.matchList.innerHTML = `
+      <div class="match-empty">
+        <div class="empty-icon">📋</div>
+        <h3>전적 없음</h3>
+        <p>최근 전적이 없습니다.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 매치 상세 데이터 병렬 로드 (5개씩 배치)
+  state.matchDetails = {};
+  elements.matchList.innerHTML = `
+    <div class="match-loading">
+      <div class="spinner"></div>
+      <p>전적 상세 정보 로딩 중 (0/${matchIds.length})...</p>
+    </div>
+  `;
+
+  const batchSize = 5;
+  for (let i = 0; i < matchIds.length; i += batchSize) {
+    const batch = matchIds.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(async (matchId) => {
+        if (state.matchDetails[matchId]) return state.matchDetails[matchId];
+        const res = await fetch(`/api/riot/match/${matchId}`);
+        if (!res.ok) throw new Error(`매치 ${matchId} 로드 실패`);
+        return res.json();
+      })
+    );
+
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        state.matchDetails[batch[idx]] = result.value;
+      }
+    });
+
+    // 진행 상황 업데이트
+    const loadingEl = elements.matchList.querySelector('.match-loading p');
+    if (loadingEl) {
+      loadingEl.textContent = `전적 상세 정보 로딩 중 (${Math.min(i + batchSize, matchIds.length)}/${matchIds.length})...`;
+    }
+  }
+
+  // 전적 리스트 렌더링
+  renderMatchList();
+}
+
+// 전적 리스트 렌더링
+function renderMatchList() {
+  elements.matchList.innerHTML = '';
+  const puuid = state.summonerProfile?.puuid;
+
+  state.matchIds.forEach(matchId => {
+    const match = state.matchDetails[matchId];
+    if (!match) return;
+
+    const info = match.info;
+    const me = info.participants.find(p => p.puuid === puuid);
+    if (!me) return;
+
+    const isWin = me.win;
+    const isRemake = info.gameDuration < 300;
+    const resultClass = isRemake ? 'remake' : (isWin ? 'win' : 'lose');
+    const resultText = isRemake ? '다시하기' : (isWin ? '승리' : '패배');
+
+    const champImg = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${me.championName}.png`;
+    const kda = me.deaths === 0 ? 'Perfect' : ((me.kills + me.assists) / me.deaths).toFixed(2);
+    const cs = me.totalMinionsKilled + (me.neutralMinionsKilled || 0);
+    const gameDuration = formatGameDuration(info.gameDuration);
+    const queueName = getQueueName(info.queueId);
+
+    // 아이템 이미지들
+    const itemSlots = [me.item0, me.item1, me.item2, me.item3, me.item4, me.item5, me.item6];
+    const itemsHtml = itemSlots.map(itemId => {
+      if (itemId && itemId > 0) {
+        return `<img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${itemId}.png" alt="아이템">`;
+      }
+      return '<div class="item-empty"></div>';
+    }).join('');
+
+    // 게임 시간 ago 계산
+    const gameEndTime = info.gameEndTimestamp || (info.gameStartTimestamp + info.gameDuration * 1000);
+    const agoMs = Date.now() - gameEndTime;
+    const agoMin = Math.floor(agoMs / 60000);
+    const agoHour = Math.floor(agoMin / 60);
+    const agoDay = Math.floor(agoHour / 24);
+    let agoText = '';
+    if (agoDay > 0) agoText = `${agoDay}일 전`;
+    else if (agoHour > 0) agoText = `${agoHour}시간 전`;
+    else agoText = `${agoMin}분 전`;
+
+    const card = document.createElement('div');
+    card.className = `match-card ${resultClass}`;
+    if (matchId === state.selectedMatchId) card.classList.add('selected');
+
+    card.innerHTML = `
+      <img class="mc-champ" src="${champImg}" alt="${me.championName}">
+      <div class="mc-info">
+        <div class="mc-result ${resultClass}">${resultText}</div>
+        <div class="mc-queue">${queueName}</div>
+      </div>
+      <div>
+        <div class="mc-kda">${me.kills} / <span style="color:#f87171">${me.deaths}</span> / ${me.assists}</div>
+        <div class="mc-kda-ratio">KDA ${kda}</div>
+      </div>
+      <div class="mc-cs-time">
+        <div>CS ${cs}</div>
+        <div>${gameDuration}</div>
+        <div style="font-size:10px;color:var(--text-sub)">${agoText}</div>
+      </div>
+      <div class="mc-items">${itemsHtml}</div>
+    `;
+
+    card.addEventListener('click', () => {
+      // 기존 선택 해제
+      document.querySelectorAll('.match-card.selected').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.selectedMatchId = matchId;
+      showMatchDetail(matchId);
+    });
+
+    elements.matchList.appendChild(card);
+  });
+}
+
+// 매치 상세 정보 표시 (우측 패널)
+function showMatchDetail(matchId) {
+  const match = state.matchDetails[matchId];
+  if (!match) return;
+
+  const info = match.info;
+  const puuid = state.summonerProfile?.puuid;
+  const me = info.participants.find(p => p.puuid === puuid);
+  const isWin = me?.win;
+  const isRemake = info.gameDuration < 300;
+  const resultText = isRemake ? '다시하기' : (isWin ? '승리' : '패배');
+  const resultClass = isRemake ? 'remake' : (isWin ? 'win' : 'lose');
+
+  const gameDuration = formatGameDuration(info.gameDuration);
+  const queueName = getQueueName(info.queueId);
+
+  // 게임 날짜
+  const gameDate = new Date(info.gameStartTimestamp);
+  const dateStr = `${gameDate.getFullYear()}.${String(gameDate.getMonth() + 1).padStart(2, '0')}.${String(gameDate.getDate()).padStart(2, '0')} ${String(gameDate.getHours()).padStart(2, '0')}:${String(gameDate.getMinutes()).padStart(2, '0')}`;
+
+  // 팀 분리
+  const blueTeam = info.participants.filter(p => p.teamId === 100);
+  const redTeam = info.participants.filter(p => p.teamId === 200);
+
+  // 팀 결과
+  const blueWin = info.teams?.find(t => t.teamId === 100)?.win;
+  const redWin = info.teams?.find(t => t.teamId === 200)?.win;
+
+  function teamTableHtml(team, teamName, teamColor, teamWon) {
+    const resultLabel = isRemake ? '다시하기' : (teamWon ? '승리' : '패배');
+    let rows = '';
+    team.forEach(p => {
+      const isMe = p.puuid === puuid;
+      const champImg = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png`;
+      const cs = p.totalMinionsKilled + (p.neutralMinionsKilled || 0);
+      const kda = p.deaths === 0 ? 'Perfect' : ((p.kills + p.assists) / p.deaths).toFixed(2);
+      const damage = p.totalDamageDealtToChampions;
+
+      const items = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6];
+      const itemsHtml = items.map(id => {
+        if (id && id > 0) {
+          return `<img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${id}.png" alt="">`;
+        }
+        return '<div class="item-empty"></div>';
+      }).join('');
+
+      rows += `
+        <tr class="${isMe ? 'is-me' : ''}">
+          <td>
+            <div class="td-champ">
+              <img src="${champImg}" alt="${p.championName}">
+              <span class="champ-name">${p.championName}</span>
+            </div>
+          </td>
+          <td class="td-summoner" title="${p.riotIdGameName || p.summonerName || ''}">${p.riotIdGameName || p.summonerName || '알 수 없음'}</td>
+          <td class="td-kda">${p.kills}/${p.deaths}/${p.assists} <span style="font-size:11px;color:var(--text-sub)">(${kda})</span></td>
+          <td>${cs}</td>
+          <td>${damage.toLocaleString()}</td>
+          <td><div class="td-items">${itemsHtml}</div></td>
+        </tr>
+      `;
+    });
+
+    return `
+      <div class="team-table-header ${teamColor}">${teamName} (${resultLabel})</div>
+      <table class="team-table">
+        <thead>
+          <tr>
+            <th>챔피언</th>
+            <th>소환사</th>
+            <th>KDA</th>
+            <th>CS</th>
+            <th>피해량</th>
+            <th>아이템</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  elements.matchEmptyState.classList.add('hidden');
+  elements.matchDetailContent.classList.remove('hidden');
+  elements.matchDetailContent.innerHTML = `
+    <div class="match-detail-header">
+      <span class="md-result ${resultClass}">${resultText}</span>
+      <div class="md-meta">
+        <div>${queueName} · ${gameDuration}</div>
+        <div>${dateStr}</div>
+      </div>
+    </div>
+    ${teamTableHtml(blueTeam, '블루팀', 'blue', blueWin)}
+    ${teamTableHtml(redTeam, '레드팀', 'red', redWin)}
+  `;
 }

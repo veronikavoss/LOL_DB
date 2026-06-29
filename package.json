@@ -1,0 +1,12 @@
+{
+  "name": "lol-db",
+  "version": "1.0.0",
+  "description": "LOL DB - 리그 오브 레전드 도감 및 전적 검색",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

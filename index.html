@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="index.css?v=2.0.0">
+  <link rel="stylesheet" href="index.css?v=3.0.0">
 </head>
 <body>
   <!-- 로딩 오버레이 -->
@@ -28,6 +28,7 @@
       <nav class="tab-navigation">
         <button class="tab-btn active" id="tab-champions" data-tab="champions">챔피언 도감</button>
         <button class="tab-btn" id="tab-items" data-tab="items">아이템 도감</button>
+        <button class="tab-btn" id="tab-match" data-tab="match">전적 검색</button>
       </nav>
     </header>
 
@@ -56,6 +57,44 @@
         </div>
       </section>
 
+      <!-- 전적 검색 영역 (match 탭 전용) -->
+      <section class="match-section hidden" id="match-section">
+        <!-- 좌측: 프로필 + 전적 리스트 -->
+        <div class="match-left">
+          <!-- 소환사 검색 폼 -->
+          <div class="match-search-form">
+            <div class="match-search-input-wrap">
+              <input type="text" id="match-search-input" placeholder="소환사명#태그 (예: Hide on bush#KR1)" autocomplete="off">
+              <button id="match-search-btn" class="match-search-btn">검색</button>
+            </div>
+          </div>
+
+          <!-- 프로필 카드 -->
+          <div id="summoner-profile" class="summoner-profile hidden">
+            <!-- JS에서 동적 렌더링 -->
+          </div>
+
+          <!-- 전적 리스트 -->
+          <div class="match-list-scroll">
+            <div id="match-list" class="match-list">
+              <!-- JS에서 동적 렌더링 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 우측: 매치 상세 정보 -->
+        <div class="match-right">
+          <div class="empty-detail-state" id="match-empty-state">
+            <div class="empty-icon">⚔️</div>
+            <h3>전적 상세 정보</h3>
+            <p>좌측 전적 목록에서 게임을 클릭하면 상세 정보가 이곳에 표시됩니다.</p>
+          </div>
+          <div class="match-detail-content hidden" id="match-detail-content">
+            <!-- JS에서 동적 렌더링 -->
+          </div>
+        </div>
+      </section>
+
       <!-- 우측 상세 정보 패널 -->
       <section class="detail-section" id="detail-panel">
         <div class="empty-detail-state" id="empty-detail-state">
@@ -72,6 +111,6 @@
   </div>
 
   <!-- Script -->
-  <script src="app.js?v=2.0.2"></script>
+  <script src="app.js?v=3.0.0"></script>
 </body>
 </html>

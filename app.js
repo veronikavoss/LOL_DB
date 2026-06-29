@@ -2136,3 +2136,102 @@ function showMatchDetail(matchId) {
     ${teamTableHtml(redTeam, '레드팀', 'red', redWin)}
   `;
 }
+
+// 자동완성: 최근 검색어 저장
+function saveRecentSearch(gameName, tagLine) {
+  const key = 'lol-db-recent-searches';
+  let searches = JSON.parse(localStorage.getItem(key)) || [];
+  
+  const query = `${gameName}#${tagLine}`;
+  
+  // 기존 중복 제거 후 맨 앞에 추가
+  searches = searches.filter(s => s.toLowerCase() !== query.toLowerCase());
+  searches.unshift(query);
+  
+  // 최대 8개까지 유지
+  if (searches.length > 8) {
+    searches.pop();
+  }
+  
+  localStorage.setItem(key, JSON.stringify(searches));
+}
+
+// 자동완성: 최근 검색어 삭제
+function deleteRecentSearch(query, event) {
+  if (event) event.stopPropagation(); // 부모 클릭 이벤트 방지
+  
+  const key = 'lol-db-recent-searches';
+  let searches = JSON.parse(localStorage.getItem(key)) || [];
+  
+  searches = searches.filter(s => s !== query);
+  localStorage.setItem(key, JSON.stringify(searches));
+  
+  // 갱신 후 다시 보여주기
+  showAutocomplete();
+}
+
+// 자동완성: 목록 노출 및 렌더링
+function showAutocomplete() {
+  const listEl = elements.matchAutocompleteList;
+  const inputVal = elements.matchSearchInput.value.trim().toLowerCase();
+  
+  const key = 'lol-db-recent-searches';
+  const searches = JSON.parse(localStorage.getItem(key)) || [];
+  
+  // 입력값이 있으면 최근 검색어 중 매칭되는 항목 필터링 (로컬 자동완성)
+  const filtered = inputVal
+    ? searches.filter(s => s.toLowerCase().includes(inputVal))
+    : searches;
+    
+  if (filtered.length === 0) {
+    if (!inputVal) {
+      listEl.innerHTML = '<div class="autocomplete-empty">최근 검색어가 없습니다.</div>';
+      listEl.classList.remove('hidden');
+    } else {
+      listEl.classList.add('hidden'); // 매칭 검색어가 없으면 닫음
+    }
+    return;
+  }
+  
+  listEl.innerHTML = '';
+  filtered.forEach(query => {
+    const parts = query.split('#');
+    const name = parts[0];
+    const tag = parts[1] || '';
+    
+    const item = document.createElement('div');
+    item.className = 'autocomplete-item';
+    
+    item.innerHTML = `
+      <div class="autocomplete-info">
+        <span class="autocomplete-name">${name}</span>
+        <span class="autocomplete-tag">#${tag}</span>
+      </div>
+      <button class="autocomplete-delete-btn" title="삭제">&times;</button>
+    `;
+    
+    // 클릭 시 바로 검색
+    item.addEventListener('click', () => {
+      elements.matchSearchInput.value = query;
+      listEl.classList.add('hidden');
+      handleMatchSearch();
+    });
+    
+    // 삭제 버튼 이벤트
+    const deleteBtn = item.querySelector('.autocomplete-delete-btn');
+    deleteBtn.addEventListener('click', (e) => {
+      deleteRecentSearch(query, e);
+    });
+    
+    listEl.appendChild(item);
+  });
+  
+  listEl.classList.remove('hidden');
+}
+
+// 자동완성: 닫기
+function hideAutocomplete() {
+  setTimeout(() => {
+    elements.matchAutocompleteList.classList.add('hidden');
+  }, 200); // 아이템 클릭 이벤트가 먼저 실행되도록 약간 지연
+}

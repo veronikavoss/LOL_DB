@@ -89,6 +89,7 @@ const elements = {
   matchSection: document.getElementById('match-section'),
   matchSearchInput: document.getElementById('match-search-input'),
   matchSearchBtn: document.getElementById('match-search-btn'),
+  matchAutocompleteList: document.getElementById('match-autocomplete-list'),
   summonerProfile: document.getElementById('summoner-profile'),
   matchList: document.getElementById('match-list'),
   matchEmptyState: document.getElementById('match-empty-state'),

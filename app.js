@@ -2141,7 +2141,13 @@ function showMatchDetail(matchId) {
 // 자동완성: 최근 검색어 저장
 function saveRecentSearch(gameName, tagLine) {
   const key = 'lol-db-recent-searches';
-  let searches = JSON.parse(localStorage.getItem(key)) || [];
+  let searches = [];
+  try {
+    searches = JSON.parse(localStorage.getItem(key)) || [];
+    if (!Array.isArray(searches)) searches = [];
+  } catch (e) {
+    searches = [];
+  }
   
   const query = `${gameName}#${tagLine}`;
   
@@ -2162,7 +2168,13 @@ function deleteRecentSearch(query, event) {
   if (event) event.stopPropagation(); // 부모 클릭 이벤트 방지
   
   const key = 'lol-db-recent-searches';
-  let searches = JSON.parse(localStorage.getItem(key)) || [];
+  let searches = [];
+  try {
+    searches = JSON.parse(localStorage.getItem(key)) || [];
+    if (!Array.isArray(searches)) searches = [];
+  } catch (e) {
+    searches = [];
+  }
   
   searches = searches.filter(s => s !== query);
   localStorage.setItem(key, JSON.stringify(searches));
@@ -2177,7 +2189,13 @@ function showAutocomplete() {
   const inputVal = elements.matchSearchInput.value.trim().toLowerCase();
   
   const key = 'lol-db-recent-searches';
-  const searches = JSON.parse(localStorage.getItem(key)) || [];
+  let searches = [];
+  try {
+    searches = JSON.parse(localStorage.getItem(key)) || [];
+    if (!Array.isArray(searches)) searches = [];
+  } catch (e) {
+    searches = [];
+  }
   
   // 입력값이 있으면 최근 검색어 중 매칭되는 항목 필터링 (로컬 자동완성)
   const filtered = inputVal

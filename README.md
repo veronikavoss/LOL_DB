@@ -1,4 +1,4 @@
-# 🎮 LOL DB (League of Legends Database)
+# 🎮 LOL_DB 📑 (League of Legends Database) 
 
 라이엇 게임즈(Riot Games) Data Dragon API와 Meraki Analytics API를 유기적으로 연동하여, 리그 오브 레전드 챔피언들의 기본 스탯 및 스킬 정보(피해량, AD/AP 계수 등)와 아이템 정보를 한눈에 확인할 수 있는 초밀착형 OP.GG 스타일 데이터베이스 웹 서비스입니다.
 

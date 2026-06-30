@@ -12,8 +12,8 @@ async function onRequest(context) {
   let targetUrl = "";
   try {
     if (endpoint === "account" && pathParts.length >= 3) {
-      const gameName = encodeURIComponent(pathParts[1]);
-      const tagLine = encodeURIComponent(pathParts[2]);
+      const gameName = encodeURIComponent(decodeURIComponent(pathParts[1]));
+      const tagLine = encodeURIComponent(decodeURIComponent(pathParts[2]));
       targetUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}`;
     } else if (endpoint === "summoner" && pathParts.length >= 2) {
       const puuid = pathParts[1];
@@ -554,7 +554,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-KOZkKH/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-R9nEoX/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -586,7 +586,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-KOZkKH/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-R9nEoX/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

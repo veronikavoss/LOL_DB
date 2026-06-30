@@ -14,8 +14,8 @@ async function onRequest(context) {
   let targetUrl = "";
   try {
     if (endpoint === "account" && pathParts.length >= 3) {
-      const gameName = encodeURIComponent(pathParts[1]);
-      const tagLine = encodeURIComponent(pathParts[2]);
+      const gameName = encodeURIComponent(decodeURIComponent(pathParts[1]));
+      const tagLine = encodeURIComponent(decodeURIComponent(pathParts[2]));
       targetUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}`;
     } else if (endpoint === "summoner" && pathParts.length >= 2) {
       const puuid = pathParts[1];

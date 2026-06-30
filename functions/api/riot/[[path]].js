@@ -16,8 +16,10 @@ export async function onRequest(context) {
   try {
     if (endpoint === 'account' && pathParts.length >= 3) {
       // /api/riot/account/:gameName/:tagLine
-      const gameName = encodeURIComponent(pathParts[1]);
-      const tagLine = encodeURIComponent(pathParts[2]);
+      // Cloudflare context.params.path는 이미 URL 디코딩된 상태로 들어올 수 있으므로, 
+      // 이를 원본 상태로 안전하게 인코딩합니다. (단 이중 인코딩을 방지하기 위해 디코딩 후 인코딩)
+      const gameName = encodeURIComponent(decodeURIComponent(pathParts[1]));
+      const tagLine = encodeURIComponent(decodeURIComponent(pathParts[2]));
       targetUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}`;
     } 
     else if (endpoint === 'summoner' && pathParts.length >= 2) {

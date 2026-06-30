@@ -1779,14 +1779,20 @@ async function handleMatchSearch() {
   elements.matchSearchBtn.textContent = '검색 중...';
 
   // 프로필 영역에 로딩 표시
-  elements.summonerProfile.classList.remove('hidden');
-  elements.summonerProfile.innerHTML = `
+  // 프로필 영역에 로딩 표시
+  elements.summonerProfileHeader.classList.remove('hidden');
+  elements.summonerProfileHeader.innerHTML = `
     <div class="match-loading">
       <div class="spinner"></div>
       <p>소환사 정보를 불러오는 중...</p>
     </div>
   `;
   elements.matchList.innerHTML = '';
+  elements.matchSummaryWidget.innerHTML = '';
+
+  try {
+    await searchSummoner(gameName, tagLine);
+  } catch (error) {
     elements.summonerProfileHeader.classList.remove('hidden');
     elements.summonerProfileHeader.innerHTML = `
       <div class="match-error">

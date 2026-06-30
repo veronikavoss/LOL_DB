@@ -737,10 +737,14 @@ body {
 }
 
 /* 소환사 검색 폼 */
+.match-search-container {
+  background: var(--bg-primary);
+}
+
 .match-search-form {
-  max-width: 660px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 16px 0;
+  padding: 16px 20px;
 }
 
 .match-search-input-wrap {
@@ -876,12 +880,13 @@ body {
 .summoner-profile-header {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  padding: 24px 20px 0;
+  padding: 24px 0 0;
 }
 
 .profile-header-inner {
   max-width: 1080px;
   margin: 0 auto;
+  padding: 0 20px;
 }
 
 .profile-header-top {

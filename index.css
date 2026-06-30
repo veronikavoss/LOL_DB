@@ -738,8 +738,9 @@ body {
 
 /* 소환사 검색 폼 */
 .match-search-form {
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 16px 0;
 }
 
 .match-search-input-wrap {
@@ -875,7 +876,7 @@ body {
 .summoner-profile-header {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  padding: 30px 40px 0;
+  padding: 24px 20px 0;
 }
 
 .profile-header-inner {
@@ -1243,16 +1244,19 @@ body {
 
 /* 2. 챔피언 및 스펠 */
 .mc-champion {
-  padding: 12px;
+  padding: 12px 6px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
+  width: 116px;
+  flex-shrink: 0;
 }
 
 .champ-img-wrap {
   position: relative;
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
 }
 
 .champ-img-wrap img {
@@ -1274,11 +1278,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #111;
 }
 
-.spell-rune-wrap {
-  display: grid;
-  grid-template-columns: 22px 22px;
+.spell-col, .rune-col {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
 }
 
@@ -1293,18 +1298,20 @@ body {
 
 /* 3. KDA 및 통계 */
 .mc-kda-stats {
-  padding: 12px;
+  padding: 12px 6px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 120px;
+  flex-shrink: 0;
 }
 
 .kda-text {
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 2px;
+  white-space: nowrap;
 }
 .kda-text span.death { color: #e84057; }
 
@@ -1315,7 +1322,7 @@ body {
 
 /* 4. 기타 정보 (킬관여, CS) */
 .mc-extra-stats {
-  padding: 12px;
+  padding: 12px 6px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1323,21 +1330,35 @@ body {
   font-size: 11px;
   color: var(--text-sub);
   text-align: center;
+  flex-shrink: 0;
 }
 
-.mc-extra-stats .kp { color: #e84057; }
+.mc-extra-stats .kp { color: #e84057; font-weight: 700; }
 
 /* 5. 아이템 */
 .mc-items-wrap {
-  padding: 12px;
+  padding: 12px 6px;
   display: flex;
+  align-items: center;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.items-container {
+  display: flex;
+  gap: 4px;
   align-items: center;
 }
 
-.item-grid {
+.item-main-grid {
   display: grid;
-  grid-template-columns: repeat(4, 22px);
+  grid-template-columns: repeat(3, 22px);
   gap: 2px;
+}
+
+.item-trinket-slot {
+  display: flex;
+  align-items: center;
 }
 
 .item-slot {
@@ -1351,16 +1372,19 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 4px;
+  display: block;
 }
 
 .item-slot.trinket { border-radius: 50%; overflow: hidden; }
+.item-slot.trinket img { border-radius: 50%; }
 
 /* 6. 참가자 10명 리스트 */
 .mc-participants {
-  padding: 12px;
+  padding: 12px 6px;
   display: flex;
   gap: 8px;
-  width: 170px;
+  flex: 1;
+  min-width: 0;
   font-size: 11px;
 }
 

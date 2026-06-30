@@ -2061,13 +2061,18 @@ function renderMatchList() {
     const agoDay = Math.floor(agoMs / 86400000);
     const agoText = agoDay > 0 ? `${agoDay}일 전` : (Math.floor(agoMs / 3600000) > 0 ? `${Math.floor(agoMs / 3600000)}시간 전` : `${Math.floor(agoMs / 60000)}분 전`);
 
-    // 아이템 (6슬롯 + 장신구)
-    const items = [me.item0, me.item1, me.item2, me.item3, me.item4, me.item5, me.item6];
-    const itemsHtml = items.map((id, idx) => {
-      const cls = idx === 6 ? 'item-slot trinket' : 'item-slot';
-      if (id > 0) return `<div class="${cls}"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${id}.png"></div>`;
-      return `<div class="${cls}"></div>`;
+    // 아이템 (6슬롯 + 장신구) 분리 레이아웃
+    const mainItems = [me.item0, me.item1, me.item2, me.item3, me.item4, me.item5];
+    const trinketId = me.item6;
+
+    const mainItemsHtml = mainItems.map(id => {
+      if (id > 0) return `<div class="item-slot"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${id}.png"></div>`;
+      return `<div class="item-slot"></div>`;
     }).join('');
+
+    const trinketHtml = trinketId > 0
+      ? `<div class="item-slot trinket"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${trinketId}.png"></div>`
+      : `<div class="item-slot trinket"></div>`;
 
     // 참가자 목록 (2열 5행)
     const blueTeam = info.participants.filter(p => p.teamId === 100);
@@ -2132,9 +2137,13 @@ function renderMatchList() {
             <img src="${champImg}">
             <span class="champ-level">${me.champLevel}</span>
           </div>
-          <div class="spell-rune-wrap">
-            <div class="spell-icon"></div><div class="rune-icon"></div>
-            <div class="spell-icon"></div><div class="rune-icon"></div>
+          <div class="spell-col">
+            <div class="spell-icon"></div>
+            <div class="spell-icon"></div>
+          </div>
+          <div class="rune-col">
+            <div class="rune-icon"></div>
+            <div class="rune-icon"></div>
           </div>
         </div>
         
@@ -2149,7 +2158,10 @@ function renderMatchList() {
         </div>
         
         <div class="mc-items-wrap">
-          <div class="item-grid">${itemsHtml}</div>
+          <div class="items-container">
+            <div class="item-main-grid">${mainItemsHtml}</div>
+            <div class="item-trinket-slot">${trinketHtml}</div>
+          </div>
         </div>
         
         <div class="mc-participants">

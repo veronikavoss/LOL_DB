@@ -1199,16 +1199,18 @@ body {
 .match-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .match-card {
   display: flex;
+  align-items: center;
   background: #282830;
   border-radius: 4px;
   overflow: hidden;
-  border-left: 6px solid #6b7280;
+  border-left: 4px solid #6b7280;
   color: var(--text-main);
+  height: 96px;
 }
 
 /* 결과별 색상 (승/패/다시하기) */
@@ -1224,31 +1226,30 @@ body {
 
 /* 1. 게임 정보 바 */
 .mc-game-info {
-  width: 110px;
-  padding: 12px;
+  width: 108px;
+  padding: 0 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   font-size: 12px;
   color: var(--text-sub);
-  border-right: 1px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
 }
 
-.mc-game-info .queue { font-weight: 700; color: var(--text-main); }
-.mc-game-info .ago { margin-bottom: 6px; }
-.mc-game-info .divider { width: 40px; height: 1px; background: rgba(255,255,255,0.1); margin: 6px 0; }
-.mc-game-info .result { font-weight: 700; }
+.mc-game-info .queue { font-weight: 700; font-size: 12px; color: var(--text-main); }
+.mc-game-info .ago { font-size: 12px; margin-bottom: 4px; }
+.mc-game-info .divider { width: 48px; height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+.mc-game-info .result { font-weight: 700; font-size: 12px; }
 .match-card.win .mc-game-info .result { color: #5383e8; }
 .match-card.lose .mc-game-info .result { color: #e84057; }
-.mc-game-info .duration { font-size: 11px; }
+.mc-game-info .duration { font-size: 12px; }
 
 /* 2. 챔피언 및 스펠 */
 .mc-champion {
-  padding: 12px 6px;
+  padding: 0 8px;
   display: flex;
   gap: 4px;
   align-items: center;
-  width: 116px;
   flex-shrink: 0;
 }
 
@@ -1298,12 +1299,12 @@ body {
 
 /* 3. KDA 및 통계 */
 .mc-kda-stats {
-  padding: 12px 6px;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 120px;
+  width: 110px;
   flex-shrink: 0;
 }
 
@@ -1322,10 +1323,11 @@ body {
 
 /* 4. 기타 정보 (킬관여, CS) */
 .mc-extra-stats {
-  padding: 12px 6px;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   width: 90px;
   font-size: 11px;
   color: var(--text-sub);
@@ -1337,10 +1339,9 @@ body {
 
 /* 5. 아이템 */
 .mc-items-wrap {
-  padding: 12px 6px;
+  padding: 0 8px;
   display: flex;
   align-items: center;
-  width: 110px;
   flex-shrink: 0;
 }
 
@@ -1380,12 +1381,13 @@ body {
 
 /* 6. 참가자 10명 리스트 */
 .mc-participants {
-  padding: 12px 6px;
+  padding: 0 8px;
   display: flex;
   gap: 8px;
   flex: 1;
   min-width: 0;
   font-size: 11px;
+  justify-content: flex-end;
 }
 
 .participant-col {
@@ -1393,6 +1395,7 @@ body {
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  min-width: 85px;
   overflow: hidden;
 }
 
@@ -1400,6 +1403,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
 }
 
 .p-player img {
@@ -1423,13 +1427,18 @@ body {
 /* 7. 아코디언 토글 버튼 */
 .mc-action {
   width: 40px;
+  height: 100%;
   background: rgba(0,0,0,0.1);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 8px;
   cursor: pointer;
+  flex-shrink: 0;
+  color: var(--text-sub);
+  transition: color 0.15s;
 }
+.mc-action:hover { color: var(--text-main); }
 .match-card.win .mc-action { background: #2f436e; }
 .match-card.lose .mc-action { background: #703c47; }
 

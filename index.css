@@ -717,6 +717,8 @@ body {
   flex: 1;
   overflow-y: auto;
   width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
   background-color: var(--bg-primary);
 }
 

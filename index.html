@@ -59,9 +59,8 @@
 
       <!-- 전적 검색 영역 (match 탭 전용) -->
       <section class="match-section hidden" id="match-section">
-        <!-- 좌측: 프로필 + 전적 리스트 -->
-        <div class="match-left">
-          <!-- 소환사 검색 폼 -->
+        <!-- 소환사 검색 폼 -->
+        <div class="match-search-container">
           <div class="match-search-form">
             <div class="match-search-input-wrap">
               <div class="match-input-container">
@@ -71,29 +70,31 @@
               <button id="match-search-btn" class="match-search-btn">검색</button>
             </div>
           </div>
+        </div>
 
-          <!-- 프로필 카드 -->
-          <div id="summoner-profile" class="summoner-profile hidden">
-            <!-- JS에서 동적 렌더링 -->
-          </div>
+        <!-- 전체 프로필 헤더 (아이콘, 이름, 탭) -->
+        <div id="summoner-profile-header" class="summoner-profile-header hidden">
+          <!-- JS에서 동적 렌더링 -->
+        </div>
 
-          <!-- 전적 리스트 -->
-          <div class="match-list-scroll">
+        <!-- 하단 대시보드 레이아웃 (좌측 사이드바 + 우측 메인) -->
+        <div id="match-dashboard" class="match-dashboard hidden">
+          <!-- 좌측: 랭크 사이드바 -->
+          <aside class="match-sidebar">
+            <div id="rank-info">
+              <!-- JS에서 동적 렌더링 -->
+            </div>
+          </aside>
+
+          <!-- 우측: 20게임 요약 및 매치 리스트 -->
+          <div class="match-main-content">
+            <div id="match-summary-widget" class="match-summary-widget">
+              <!-- JS에서 동적 렌더링 -->
+            </div>
+            
             <div id="match-list" class="match-list">
               <!-- JS에서 동적 렌더링 -->
             </div>
-          </div>
-        </div>
-
-        <!-- 우측: 매치 상세 정보 -->
-        <div class="match-right">
-          <div class="empty-detail-state" id="match-empty-state">
-            <div class="empty-icon">⚔️</div>
-            <h3>전적 상세 정보</h3>
-            <p>좌측 전적 목록에서 게임을 클릭하면 상세 정보가 이곳에 표시됩니다.</p>
-          </div>
-          <div class="match-detail-content hidden" id="match-detail-content">
-            <!-- JS에서 동적 렌더링 -->
           </div>
         </div>
       </section>

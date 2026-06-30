@@ -1787,14 +1787,8 @@ async function handleMatchSearch() {
     </div>
   `;
   elements.matchList.innerHTML = '';
-  elements.matchEmptyState.classList.add('hidden');
-  elements.matchDetailContent.classList.add('hidden');
-
-  try {
-    await searchSummoner(gameName, tagLine);
-  } catch (error) {
-    console.error('전적 검색 오류:', error);
-    elements.summonerProfile.innerHTML = `
+    elements.summonerProfileHeader.classList.remove('hidden');
+    elements.summonerProfileHeader.innerHTML = `
       <div class="match-error">
         <p>❌ ${error.message || '소환사를 찾을 수 없습니다.'}</p>
         <p style="font-size:12px; margin-top:8px; color:var(--text-sub);">소환사명#태그를 다시 확인해주세요.</p>
@@ -1847,24 +1841,53 @@ async function searchSummoner(gameName, tagLine) {
   await loadMatchHistory(accountData.puuid);
 }
 
-// 프로필 영역 렌더링
+// 프로필 영역 렌더링 (헤더 + 랭크 사이드바)
 function renderMatchProfile() {
   const p = state.summonerProfile;
   if (!p) return;
 
   const iconUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/profileicon/${p.profileIconId}.png`;
 
-  // 랭크 정보
+  // 1. 전체 프로필 헤더 렌더링
+  elements.summonerProfileHeader.classList.remove('hidden');
+  elements.matchDashboard.classList.remove('hidden'); // 대시보드 구조 보이기
+  
+  elements.summonerProfileHeader.innerHTML = `
+    <div class="profile-header-inner">
+      <div class="profile-header-top">
+        <div class="profile-icon-wrap">
+          <img src="${iconUrl}" alt="프로필 아이콘">
+          <span class="profile-level">${p.summonerLevel}</span>
+        </div>
+        <div class="profile-info">
+          <h2>${p.gameName} <span class="profile-tag">#${p.tagLine}</span></h2>
+          <div class="profile-actions">
+            <button class="btn-refresh" onclick="document.getElementById('match-search-btn').click()">전적 갱신</button>
+          </div>
+        </div>
+      </div>
+      <div class="profile-tabs">
+        <div class="profile-tab active">종합</div>
+        <div class="profile-tab">챔피언</div>
+        <div class="profile-tab">인게임 정보</div>
+      </div>
+    </div>
+  `;
+
+  // 2. 좌측 랭크 위젯 렌더링
   const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
   const flexRank = p.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
 
   function rankHtml(rank, label) {
     if (!rank) {
       return `
-        <div class="rank-badge">
-          <div>
-            <div class="rank-type">${label}</div>
-            <div class="rank-tier" style="color:var(--text-sub);">Unranked</div>
+        <div class="rank-box">
+          <div class="rank-box-header">${label}</div>
+          <div class="rank-box-content">
+            <div class="rank-icon"><span style="color:var(--text-sub);font-size:12px;">Unranked</span></div>
+            <div class="rank-details">
+              <div class="rank-tier" style="color:var(--text-sub);">Unranked</div>
+            </div>
           </div>
         </div>
       `;
@@ -1874,33 +1897,26 @@ function renderMatchProfile() {
     const total = wins + losses;
     const winrate = total > 0 ? Math.round((wins / total) * 100) : 0;
     return `
-      <div class="rank-badge">
-        <div>
-          <div class="rank-type">${label}</div>
-          <div class="rank-tier">${getTierName(rank.tier)} ${rank.rank}</div>
-          <div class="rank-lp">${rank.leaguePoints} LP</div>
-          <div class="rank-winrate">${wins}승 ${losses}패 (${winrate}%)</div>
+      <div class="rank-box">
+        <div class="rank-box-header">${label}</div>
+        <div class="rank-box-content">
+          <div class="rank-icon">
+            <!-- 티어 이미지 매핑은 향후 고도화 가능. 현재는 텍스트 위주 -->
+            <span style="font-size:12px;font-weight:bold;color:var(--color-gold);">${rank.tier.charAt(0)}${rank.tier.slice(1).toLowerCase()}</span>
+          </div>
+          <div class="rank-details">
+            <div class="rank-tier">${getTierName(rank.tier)} ${rank.rank}</div>
+            <div class="rank-lp">${rank.leaguePoints} LP</div>
+            <div class="rank-winrate">${wins}승 ${losses}패 (${winrate}%)</div>
+          </div>
         </div>
       </div>
     `;
   }
 
-  elements.summonerProfile.classList.remove('hidden');
-  elements.summonerProfile.innerHTML = `
-    <div class="profile-header">
-      <div class="profile-icon-wrap">
-        <img src="${iconUrl}" alt="프로필 아이콘">
-        <span class="profile-level">${p.summonerLevel}</span>
-      </div>
-      <div class="profile-info">
-        <h2>${p.gameName}</h2>
-        <span class="profile-tag">#${p.tagLine}</span>
-      </div>
-    </div>
-    <div class="profile-ranks">
-      ${rankHtml(soloRank, '솔로 랭크')}
-      ${rankHtml(flexRank, '자유 랭크')}
-    </div>
+  elements.rankInfo.innerHTML = `
+    ${rankHtml(soloRank, '솔로 랭크')}
+    ${rankHtml(flexRank, '자유 랭크')}
   `;
 }
 

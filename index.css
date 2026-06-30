@@ -713,9 +713,11 @@ body {
 /* 전적 검색 섹션 레이아웃 */
 .match-section {
   display: flex;
+  flex-direction: column;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   width: 100%;
+  background-color: var(--bg-primary);
 }
 
 .match-left {

@@ -1,5 +1,7 @@
 console.log('DEX app.js v3.0.0 loaded');
 
+const API_BASE = '/api/riot';
+
 // 글로벌 상태 객체
 const state = {
   version: '14.3.1', // 초기값, api 통신 후 동적으로 갱신됨

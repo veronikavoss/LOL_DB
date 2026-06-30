@@ -742,9 +742,7 @@ body {
 }
 
 .match-search-form {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 16px 20px;
+  padding: 16px 40px;
 }
 
 .match-search-input-wrap {
@@ -884,9 +882,7 @@ body {
 }
 
 .profile-header-inner {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 40px;
 }
 
 .profile-header-top {
@@ -993,9 +989,8 @@ body {
 .match-dashboard {
   display: flex;
   gap: 10px;
-  max-width: 1080px;
-  margin: 10px auto;
-  padding: 0 20px;
+  margin: 10px 0;
+  padding: 0 40px;
 }
 
 /* 좌측 랭크 사이드바 */

@@ -1367,20 +1367,9 @@ body {
 }
 
 .items-container {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.item-main-grid {
   display: grid;
-  grid-template-columns: repeat(3, 22px);
+  grid-template-columns: repeat(4, 22px);
   gap: 2px;
-}
-
-.item-trinket-slot {
-  display: flex;
-  align-items: center;
 }
 
 .item-slot {

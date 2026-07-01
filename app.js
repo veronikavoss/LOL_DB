@@ -2209,6 +2209,10 @@ function renderMatchList() {
           <div class="items-container">
             ${itemsHtmlArr[0]} ${itemsHtmlArr[1]} ${itemsHtmlArr[2]} ${trinketHtml}
             ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]}
+            <div class="item-slot ward-slot ${me.visionWardsBoughtInGame > 0 ? '' : 'empty-ward'}" title="제어 와드 구매">
+              <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png">
+              ${me.visionWardsBoughtInGame > 0 ? `<span class="ward-count">${me.visionWardsBoughtInGame}</span>` : ''}
+            </div>
           </div>
         </div>
         <div class="mc-participants">

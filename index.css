@@ -1247,7 +1247,7 @@ body {
 
 /* 1. 게임 정보 바 */
 .mc-game-info {
-  width: 108px;
+  width: 95px;
   padding: 0 12px;
   display: flex;
   flex-direction: column;
@@ -1325,7 +1325,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 110px;
+  width: 95px;
   flex-shrink: 0;
 }
 
@@ -1349,7 +1349,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 90px;
+  width: 85px;
   font-size: 11px;
   color: var(--text-sub);
   text-align: center;
@@ -1360,7 +1360,7 @@ body {
 
 /* 5. 아이템 */
 .mc-items-wrap {
-  padding: 0 8px;
+  padding: 0 4px;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -1405,7 +1405,8 @@ body {
   flex-direction: column;
   gap: 2px;
   flex: 1;
-  min-width: 85px;
+  min-width: 75px;
+  width: 75px;
   overflow: hidden;
 }
 
@@ -1427,6 +1428,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .p-player.is-me span {

@@ -737,6 +737,11 @@ body {
 }
 
 /* 소환사 검색 폼 */
+.match-section {
+  width: 100%;
+  overflow-y: auto;
+}
+
 .match-search-container {
   background: var(--bg-primary);
 }

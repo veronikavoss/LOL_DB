@@ -740,6 +740,7 @@ body {
 .match-section {
   width: 100%;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .match-search-container {
@@ -1004,6 +1005,13 @@ body {
   width: 100%;
   margin: 10px auto;
   padding: 0 40px;
+  overflow: hidden;
+}
+
+.match-main-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* 좌측 랭크 사이드바 */

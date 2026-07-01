@@ -7,6 +7,8 @@ const state = {
   version: '14.3.1', // 초기값, api 통신 후 동적으로 갱신됨
   champions: [],
   items: [],
+  spells: {},
+  runes: [],
   currentTab: 'champions', // 'champions' | 'items' | 'match'
   searchQuery: '',
   activeFilter: 'ALL',
@@ -110,10 +112,12 @@ async function init() {
     state.version = versions[0]; // 가장 최근 패치 버전
     elements.patchVersion.textContent = `Ver. ${state.version}`;
 
-    // 2. 챔피언, 아이템 및 Meraki 정밀 스펙 데이터 일괄 사전 로드 (로딩 단계에서 완벽 동기화)
+    // 2. 챔피언, 아이템, 스펠, 룬 및 Meraki 정밀 스펙 데이터 일괄 사전 로드 (로딩 단계에서 완벽 동기화)
     await Promise.all([
       loadChampions(),
       loadItems(),
+      loadSpells(),
+      loadRunes(),
       loadMerakiData()
     ]);
 
@@ -148,6 +152,21 @@ async function loadChampions() {
   const data = await response.json();
   // 정렬된 배열 형태로 저장
   state.champions = Object.values(data.data).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+}
+
+async function loadSpells() {
+  const url = `https://ddragon.leagueoflegends.com/cdn/${state.version}/data/ko_KR/summoner.json`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('스펠 정보 로드 실패');
+  const data = await response.json();
+  state.spells = data.data;
+}
+
+async function loadRunes() {
+  const url = `https://ddragon.leagueoflegends.com/cdn/${state.version}/data/ko_KR/runesReforged.json`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('룬 정보 로드 실패');
+  state.runes = await response.json();
 }
 
 // 아이템 목록 API 호출
@@ -2045,6 +2064,36 @@ function renderMatchList() {
     const resultText = isRemake ? '다시하기' : (isWin ? '승리' : '패배');
 
     const champImg = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${me.championName}.png`;
+    
+    // 스펠 이미지 찾기
+    const spell1Obj = Object.values(state.spells).find(s => s.key == me.summoner1Id);
+    const spell2Obj = Object.values(state.spells).find(s => s.key == me.summoner2Id);
+    const spell1Img = spell1Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell1Obj.id}.png` : '';
+    const spell2Img = spell2Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell2Obj.id}.png` : '';
+
+    // 룬 이미지 찾기
+    let rune1Img = '';
+    let rune2Img = '';
+    if (me.perks && me.perks.styles) {
+      const primaryStyle = me.perks.styles[0];
+      const subStyle = me.perks.styles[1];
+      
+      // 핵심 룬 (primaryStyle.selections[0].perk)
+      if (primaryStyle && primaryStyle.selections && primaryStyle.selections[0]) {
+        const primaryPerkId = primaryStyle.selections[0].perk;
+        const primaryTree = state.runes.find(r => r.id === primaryStyle.style);
+        if (primaryTree && primaryTree.slots && primaryTree.slots[0]) {
+          const perkObj = primaryTree.slots[0].runes.find(r => r.id === primaryPerkId);
+          if (perkObj) rune1Img = `https://ddragon.leagueoflegends.com/cdn/img/${perkObj.icon}`;
+        }
+      }
+      
+      // 보조 룬 트리 아이콘 (subStyle.style)
+      if (subStyle) {
+        const subTree = state.runes.find(r => r.id === subStyle.style);
+        if (subTree) rune2Img = `https://ddragon.leagueoflegends.com/cdn/img/${subTree.icon}`;
+      }
+    }
     const kda = me.deaths === 0 ? 'Perfect' : ((me.kills + me.assists) / me.deaths).toFixed(2);
     
     const teamKills = info.participants.filter(p => p.teamId === me.teamId).reduce((sum, p) => sum + p.kills, 0);
@@ -2138,12 +2187,12 @@ function renderMatchList() {
             <span class="champ-level">${me.champLevel}</span>
           </div>
           <div class="spell-col">
-            <div class="spell-icon"></div>
-            <div class="spell-icon"></div>
+            <div class="spell-icon">${spell1Img ? `<img src="${spell1Img}">` : ''}</div>
+            <div class="spell-icon">${spell2Img ? `<img src="${spell2Img}">` : ''}</div>
           </div>
           <div class="rune-col">
-            <div class="rune-icon"></div>
-            <div class="rune-icon"></div>
+            <div class="rune-icon">${rune1Img ? `<img src="${rune1Img}">` : ''}</div>
+            <div class="rune-icon">${rune2Img ? `<img src="${rune2Img}">` : ''}</div>
           </div>
         </div>
         

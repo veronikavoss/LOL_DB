@@ -127,6 +127,16 @@ async function init() {
     // 4. 초기 뷰 렌더링
     renderFilters();
     renderList();
+
+    // 5. URL 파라미터가 있는 경우 전적 검색 자동 수행
+    const params = new URLSearchParams(location.search);
+    const name = params.get('name');
+    const tag = params.get('tag');
+    if (name && tag) {
+      switchTab('match');
+      elements.matchSearchInput.value = `${name}#${tag}`;
+      handleMatchSearch();
+    }
   } catch (error) {
     console.error('초기화 에러:', error);
     alert('데이터를 로드하는 중 문제가 발생했습니다. 페이지를 새로고침 해주세요.');
@@ -256,6 +266,24 @@ function setupEventListeners() {
   document.addEventListener('click', (e) => {
     if (!elements.matchSearchInput.contains(e.target) && !elements.matchAutocompleteList.contains(e.target)) {
       hideAutocomplete();
+    }
+  });
+
+  // 뒤로가기 / 앞으로가기 히스토리 라우팅 처리
+  window.addEventListener('popstate', (e) => {
+    const params = new URLSearchParams(location.search);
+    const name = params.get('name');
+    const tag = params.get('tag');
+    if (name && tag) {
+      switchTab('match');
+      elements.matchSearchInput.value = `${name}#${tag}`;
+      handleMatchSearch();
+    } else {
+      elements.matchSearchInput.value = '';
+      elements.summonerProfileHeader.classList.add('hidden');
+      elements.matchDashboard.classList.add('hidden');
+      elements.matchList.innerHTML = '';
+      elements.matchSummaryWidget.innerHTML = '';
     }
   });
 }
@@ -1808,6 +1836,12 @@ async function handleMatchSearch() {
   const gameName = parts[0].trim();
   const tagLine = parts.slice(1).join('#').trim();
 
+  // 브라우저 뒤로가기를 위한 히스토리 상태 push
+  const targetUrl = `?name=${encodeURIComponent(gameName)}&tag=${encodeURIComponent(tagLine)}`;
+  if (location.search !== targetUrl) {
+    history.pushState({ gameName, tagLine }, '', targetUrl);
+  }
+
   state.matchSearching = true;
   elements.matchSearchBtn.disabled = true;
   elements.matchSearchBtn.textContent = '검색 중...';
@@ -2187,6 +2221,10 @@ function renderMatchList() {
       }
     }
 
+    const wardHtml = me.visionWardsBoughtInGame > 0
+      ? `<div class="item-slot ward-slot" title="제어 와드 구매량: ${me.visionWardsBoughtInGame}"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png">${me.visionWardsBoughtInGame > 1 ? `<span class="ward-count">${me.visionWardsBoughtInGame}</span>` : ''}</div>`
+      : `<div class="item-slot ward-slot empty-ward"></div>`;
+
     function renderParticipants(team) {
       return team.map(p => {
         const gameName = p.riotIdGameName || p.summonerName || '알 수 없음';
@@ -2316,6 +2354,54 @@ function renderMatchList() {
           ? `<div class="detail-item-slot trinket-slot"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${trinketId}.png"></div>` 
           : `<div class="detail-item-slot empty trinket-slot"></div>`;
 
+        // 제어 와드
+        const detailWardHtml = p.visionWardsBoughtInGame > 0 
+          ? `<div class="detail-item-slot ward-slot" title="제어 와드 구매량: ${p.visionWardsBoughtInGame}"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png"></div>` 
+          : `<div class="detail-item-slot empty ward-slot"></div>`;
+
+        // 개별 플레이어 퀘스트 보상 정보
+        let pQuestHtml = `<div class="detail-item-slot quest-slot empty"></div>`;
+        if (p.teamPosition) {
+          let questImgUrl = '';
+          let questTitle = '';
+          
+          const hasTeleport = p.summoner1Id === 12 || p.summoner2Id === 12;
+          const hasSmite = p.summoner1Id === 11 || p.summoner2Id === 11;
+          const isQuestTime = info.gameDuration > 720;
+          
+          if (isQuestTime) {
+            switch(p.teamPosition) {
+              case 'TOP':
+                if (hasTeleport) {
+                  questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerTeleport.png`;
+                  questTitle = '탑 보상: 강력 순간이동';
+                }
+                break;
+              case 'JUNGLE':
+                if (hasSmite) {
+                  questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerSmite.png`;
+                  questTitle = '정글 보상: 강력 강타';
+                }
+                break;
+              case 'MIDDLE':
+                questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/3363.png`;
+                questTitle = '미드 보상: 강화 귀환';
+                break;
+              case 'BOTTOM':
+                questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/1001.png`;
+                questTitle = '원딜 보상: 장화 전용 슬롯';
+                break;
+              case 'UTILITY':
+                questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png`;
+                questTitle = '서폿 보상: 제어 와드 전용 슬롯';
+                break;
+            }
+          }
+          if (questImgUrl) {
+            pQuestHtml = `<div class="detail-item-slot quest-slot" title="${questTitle}"><img src="${questImgUrl}"></div>`;
+          }
+        }
+
         // OP Score 등수
         const isMvpOrAce = p.customRank === 1;
         const badgeText = isMvpOrAce ? (teamWon ? 'MVP' : 'ACE') : `${p.customRank}th`;
@@ -2392,7 +2478,10 @@ function renderMatchList() {
             <td>
               <div class="td-items-container">
                 ${itemsHtml}
+                ${detailWardHtml}
                 ${trinketHtml}
+                <div class="detail-quest-divider"></div>
+                ${pQuestHtml}
               </div>
             </td>
           </tr>
@@ -2459,8 +2548,12 @@ function renderMatchList() {
         <div class="mc-items-wrap">
           <div class="items-container">
             ${itemsHtmlArr[0]} ${itemsHtmlArr[1]} ${itemsHtmlArr[2]}
+            ${wardHtml}
+            ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]}
+            ${trinketHtml}
+          </div>
+          <div class="quest-container">
             ${questHtml}
-            ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]} ${trinketHtml}
           </div>
         </div>
         <div class="mc-participants">

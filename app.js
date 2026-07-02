@@ -2130,27 +2130,38 @@ function renderMatchList() {
     if (me.teamPosition) {
       let questImgUrl = '';
       let questTitle = '';
-      switch(me.teamPosition) {
-        case 'TOP':
-          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerTeleport.png`;
-          questTitle = '탑 보상: 강력 순간이동';
-          break;
-        case 'JUNGLE':
-          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerSmite.png`;
-          questTitle = '정글 보상: 강력 강타';
-          break;
-        case 'MIDDLE':
-          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/3363.png`;
-          questTitle = '미드 보상: 강화 귀환';
-          break;
-        case 'BOTTOM':
-          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/1001.png`;
-          questTitle = '원딜 보상: 장화 전용 슬롯';
-          break;
-        case 'UTILITY':
-          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png`;
-          questTitle = '서폿 보상: 제어 와드 전용 슬롯';
-          break;
+      
+      const hasTeleport = me.summoner1Id === 12 || me.summoner2Id === 12;
+      const hasSmite = me.summoner1Id === 11 || me.summoner2Id === 11;
+      const isQuestTime = info.gameDuration > 720; // 12분(720초) 이상이면 대략 퀘스트 달성으로 추정
+      
+      if (isQuestTime) {
+        switch(me.teamPosition) {
+          case 'TOP':
+            if (hasTeleport) {
+              questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerTeleport.png`;
+              questTitle = '탑 보상: 강력 순간이동';
+            }
+            break;
+          case 'JUNGLE':
+            if (hasSmite) {
+              questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerSmite.png`;
+              questTitle = '정글 보상: 강력 강타';
+            }
+            break;
+          case 'MIDDLE':
+            questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/3363.png`;
+            questTitle = '미드 보상: 강화 귀환';
+            break;
+          case 'BOTTOM':
+            questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/1001.png`;
+            questTitle = '원딜 보상: 장화 전용 슬롯';
+            break;
+          case 'UTILITY':
+            questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png`;
+            questTitle = '서폿 보상: 제어 와드 전용 슬롯';
+            break;
+        }
       }
       if (questImgUrl) {
         questHtml = `

@@ -662,6 +662,21 @@ window.selectById = function(id) {
   showDetail(id);
 };
 
+window.searchSummonerFromLink = function(gameName, tagLine) {
+  if (!gameName) return;
+  const tag = tagLine || 'KR1';
+  const query = `${gameName}#${tag}`;
+  const inputEl = document.getElementById('match-search-input');
+  if (inputEl) {
+    inputEl.value = query;
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const btnEl = document.getElementById('match-search-btn');
+  if (btnEl) {
+    btnEl.click();
+  }
+};
+
 // HTML 태그 정제 (스킬 설명 내 깨진 툴팁 또는 원시 태그 정리)
 function cleanHtml(html) {
   if (!html) return '';

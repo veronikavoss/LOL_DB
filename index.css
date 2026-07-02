@@ -25,8 +25,6 @@ body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
   color: var(--text-main);
-  height: 100vh;
-  overflow: hidden;
 }
 
 /* 로딩 오버레이 */
@@ -155,7 +153,6 @@ body {
 .main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
   width: 100%;
 }
 
@@ -1009,13 +1006,11 @@ body {
   width: 100%;
   margin: 10px auto;
   padding: 0 40px;
-  overflow: hidden;
 }
 
 .match-main-content {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 /* 좌측 랭크 사이드바 */

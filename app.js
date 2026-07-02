@@ -2123,9 +2123,43 @@ function renderMatchList() {
       ? `<div class="item-slot trinket"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${trinketId}.png"></div>`
       : `<div class="item-slot trinket"></div>`;
 
-    // 참가자 목록 (2열 5행)
     const blueTeam = info.participants.filter(p => p.teamId === 100);
     const redTeam = info.participants.filter(p => p.teamId === 200);
+
+    let questHtml = `<div class="item-slot ward-slot empty-ward"></div>`;
+    if (me.teamPosition) {
+      let questImgUrl = '';
+      let questTitle = '';
+      switch(me.teamPosition) {
+        case 'TOP':
+          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerTeleport.png`;
+          questTitle = '탑 보상: 강력 순간이동';
+          break;
+        case 'JUNGLE':
+          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerSmite.png`;
+          questTitle = '정글 보상: 강력 강타';
+          break;
+        case 'MIDDLE':
+          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/3363.png`;
+          questTitle = '미드 보상: 강화 귀환';
+          break;
+        case 'BOTTOM':
+          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/1001.png`;
+          questTitle = '원딜 보상: 장화 전용 슬롯';
+          break;
+        case 'UTILITY':
+          questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png`;
+          questTitle = '서폿 보상: 제어 와드 전용 슬롯';
+          break;
+      }
+      if (questImgUrl) {
+        questHtml = `
+          <div class="item-slot ward-slot" title="${questTitle}">
+            <img src="${questImgUrl}" style="border-radius:4px;">
+          </div>
+        `;
+      }
+    }
 
     function renderParticipants(team) {
       return team.map(p => `
@@ -2208,10 +2242,7 @@ function renderMatchList() {
         <div class="mc-items-wrap">
           <div class="items-container">
             ${itemsHtmlArr[0]} ${itemsHtmlArr[1]} ${itemsHtmlArr[2]}
-            <div class="item-slot ward-slot ${me.visionWardsBoughtInGame > 0 ? '' : 'empty-ward'}" title="제어 와드 구매">
-              <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png">
-              ${me.visionWardsBoughtInGame > 0 ? `<span class="ward-count">${me.visionWardsBoughtInGame}</span>` : ''}
-            </div>
+            ${questHtml}
             ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]} ${trinketHtml}
           </div>
         </div>

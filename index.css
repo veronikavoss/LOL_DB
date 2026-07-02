@@ -25,6 +25,8 @@ body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
   color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* 로딩 오버레이 */
@@ -153,6 +155,7 @@ body {
 .main-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
   width: 100%;
 }
 
@@ -1006,11 +1009,13 @@ body {
   width: 100%;
   margin: 10px auto;
   padding: 0 40px;
+  overflow: hidden;
 }
 
 .match-main-content {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 /* 좌측 랭크 사이드바 */
@@ -1541,8 +1546,299 @@ body {
 
 .team-table tr.is-me td { background: rgba(255, 255, 255, 0.05); }
 
-.td-champ { display: flex; align-items: center; gap: 6px; }
-.td-champ img { width: 28px; height: 28px; border-radius: 50%; }
-.td-items { display: flex; gap: 2px; }
-.td-items img { width: 22px; height: 22px; border-radius: 3px; }
-.td-items .item-empty { width: 22px; height: 22px; border-radius: 3px; background: rgba(0,0,0,0.2); }
+/* 상세 정보 테이블 스타일 리팩토링 (OP.GG 스타일) */
+.td-champ-info-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.td-champ-avatar-box {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.td-champ-avatar-box .champ-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: block;
+}
+
+.td-champ-avatar-box .champ-level-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 3px;
+  border-radius: 50%;
+  font-weight: bold;
+  border: 1px solid #374151;
+  line-height: 1;
+}
+
+.td-spells-box, .td-runes-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-spell, .detail-rune {
+  width: 15px;
+  height: 15px;
+  border-radius: 2px;
+}
+
+.detail-spell.empty, .detail-rune.empty {
+  width: 15px;
+  height: 15px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 2px;
+}
+
+.td-summoner-name-box {
+  margin-left: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.summoner-name-link span {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.summoner-name-link span:hover {
+  text-decoration: underline;
+  color: #5383e8;
+}
+
+.summoner-level-txt {
+  font-size: 10px;
+  color: var(--text-sub);
+  margin-top: 1px;
+}
+
+/* OP Score */
+.td-opscore-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.opscore-num {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.opscore-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1;
+}
+
+.opscore-badge.badge-mvp { background: #e84057; }
+.opscore-badge.badge-ace { background: #3b82f6; }
+.opscore-badge.badge-normal { background: #4b5563; }
+
+/* KDA */
+.td-kda-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.kda-nums {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.kda-kp-ratio {
+  font-size: 10px;
+  color: #e84057;
+}
+
+.kda-ratio-txt {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+/* 피해량 */
+.td-damage-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  max-width: 120px;
+}
+
+.damage-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.deal-val {
+  color: #e84057;
+  font-weight: 500;
+}
+
+.taken-val {
+  color: var(--text-sub);
+}
+
+.damage-bars-track {
+  height: 8px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 1px;
+}
+
+.dmg-bar {
+  height: 3px;
+  border-radius: 1px;
+}
+
+.dmg-bar.deal { background: #e84057; }
+.dmg-bar.taken { background: #6b7280; }
+
+/* 와드 */
+.td-ward-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.ward-control-buy {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.ward-placed-killed {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+/* CS */
+.td-cs-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-total-num {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.cs-per-min-txt {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+/* 아이템 슬롯 */
+.td-items-container {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+}
+
+.detail-item-slot {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+
+.detail-item-slot img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.detail-item-slot.trinket-slot {
+  border-radius: 50%;
+  margin-left: 2px;
+}
+
+.detail-item-slot.trinket-slot img {
+  border-radius: 50%;
+}
+
+/* 양 팀 요약바 스타일 */
+.detail-summary-bar {
+  display: flex;
+  gap: 20px;
+  background: rgba(22, 30, 46, 0.6);
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin: 10px 0 20px 0;
+  border: 1px solid var(--border-color);
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-val {
+  font-weight: 700;
+  font-size: 13px;
+  min-width: 40px;
+}
+
+.team-val.blue {
+  color: #5383e8;
+  text-align: left;
+}
+
+.team-val.red {
+  color: #e84057;
+  text-align: right;
+}
+
+.bar-track {
+  flex: 1;
+  height: 16px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fill {
+  height: 100%;
+}
+
+.fill.blue { background: #5383e8; }
+.fill.red { background: #e84057; }
+
+.bar-label {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 10;
+  pointer-events: none;
+}
+

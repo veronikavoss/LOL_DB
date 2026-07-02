@@ -2173,34 +2173,213 @@ function renderMatchList() {
     }
 
     function renderParticipants(team) {
-      return team.map(p => `
-        <div class="p-player ${p.puuid === puuid ? 'is-me' : ''}">
-          <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png">
-          <span>${p.riotIdGameName || p.summonerName || '알 수 없음'}</span>
-        </div>
-      `).join('');
+      return team.map(p => {
+        const gameName = p.riotIdGameName || p.summonerName || '알 수 없음';
+        const tagLine = p.riotIdTagline || 'KR1';
+        return `
+          <div class="p-player ${p.puuid === puuid ? 'is-me' : ''}">
+            <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png">
+            <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
+          </div>
+        `;
+      }).join('');
     }
 
-    // 아코디언 테이블 HTML 생성 (기존 showMatchDetail 통합)
+    // 종합 정보 요약바 렌더러
+    function renderSummaryBar(blue, red) {
+      const blueKills = blue.reduce((s, m) => s + m.kills, 0);
+      const redKills = red.reduce((s, m) => s + m.kills, 0);
+      const totalKills = blueKills + redKills || 1;
+      
+      const blueGold = blue.reduce((s, m) => s + (m.goldEarned || 0), 0);
+      const redGold = red.reduce((s, m) => s + (m.goldEarned || 0), 0);
+      const totalGold = blueGold + redGold || 1;
+
+      const blueKillPct = ((blueKills / totalKills) * 100).toFixed(1);
+      const redKillPct = ((redKills / totalKills) * 100).toFixed(1);
+
+      const blueGoldPct = ((blueGold / totalGold) * 100).toFixed(1);
+      const redGoldPct = ((redGold / totalGold) * 100).toFixed(1);
+
+      return `
+        <div class="detail-summary-bar">
+          <div class="summary-item">
+            <span class="team-val blue">${blueKills}</span>
+            <div class="bar-track">
+              <div class="fill blue" style="width: ${blueKillPct}%"></div>
+              <span class="bar-label">Total Kill</span>
+              <div class="fill red" style="width: ${redKillPct}%"></div>
+            </div>
+            <span class="team-val red">${redKills}</span>
+          </div>
+          <div class="summary-item">
+            <span class="team-val blue">${blueGold.toLocaleString()}</span>
+            <div class="bar-track">
+              <div class="fill blue" style="width: ${blueGoldPct}%"></div>
+              <span class="bar-label">Total Gold</span>
+              <div class="fill red" style="width: ${redGoldPct}%"></div>
+            </div>
+            <span class="team-val red">${redGold.toLocaleString()}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // 아코디언 테이블 HTML 생성
     function renderDetailTable(team, teamColor, teamWon) {
       const rLabel = isRemake ? '다시하기' : (teamWon ? '승리' : '패배');
+      
+      const teamKills = team.reduce((sum, member) => sum + member.kills, 0);
+      
+      // 등수(customRank) 매기기 위한 임의 점수 공식
+      team.forEach(member => {
+        const kdaVal = member.deaths === 0 ? (member.kills + member.assists) * 1.2 : (member.kills + member.assists) / member.deaths;
+        const kpVal = teamKills > 0 ? ((member.kills + member.assists) / teamKills) * 100 : 0;
+        const memberCS = member.totalMinionsKilled + (member.neutralMinionsKilled || 0);
+        const csPerMinVal = memberCS / (info.gameDuration / 60);
+        
+        let rawScore = (kdaVal * 1.0) + (kpVal * 0.05) + (csPerMinVal * 0.2);
+        if (member.teamPosition === 'UTILITY') {
+          rawScore = (kdaVal * 1.2) + (kpVal * 0.08) + ((member.visionScore || 0) * 0.1);
+        }
+        member.customScore = Math.max(1.0, Math.min(10.0, rawScore));
+      });
+      
+      const sortedTeam = [...team].sort((a, b) => b.customScore - a.customScore);
+      team.forEach(member => {
+        const idx = sortedTeam.findIndex(m => m.puuid === member.puuid);
+        member.customRank = idx + 1;
+      });
+
+      const maxDamage = Math.max(...team.map(p => p.totalDamageDealtToChampions), 1);
+      const maxDamageTaken = Math.max(...team.map(p => p.totalDamageTaken), 1);
+
       const rows = team.map(p => {
         const isMe = p.puuid === puuid;
         const cImg = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png`;
         const c_cs = p.totalMinionsKilled + (p.neutralMinionsKilled || 0);
+        const csPerMin = (c_cs / (info.gameDuration / 60)).toFixed(1);
         const c_kda = p.deaths === 0 ? 'Perfect' : ((p.kills + p.assists) / p.deaths).toFixed(2);
-        const gameName = p.riotIdGameName || p.summonerName || '';
+        const gameName = p.riotIdGameName || p.summonerName || '알 수 없음';
         const tagLine = p.riotIdTagline || 'KR1';
         
-        const itms = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6].map(id => id > 0 ? `<img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${id}.png">` : '<div class="item-empty"></div>').join('');
+        // 스펠 이미지
+        const spell1Obj = Object.values(state.spells).find(s => s.key == p.summoner1Id);
+        const spell2Obj = Object.values(state.spells).find(s => s.key == p.summoner2Id);
+        const spell1Img = spell1Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell1Obj.id}.png` : '';
+        const spell2Img = spell2Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell2Obj.id}.png` : '';
+
+        // 룬 이미지
+        let rune1Img = '';
+        let rune2Img = '';
+        if (p.perks && p.perks.styles) {
+          const primaryStyle = p.perks.styles[0];
+          const subStyle = p.perks.styles[1];
+          if (primaryStyle && primaryStyle.selections && primaryStyle.selections[0]) {
+            const primaryPerkId = primaryStyle.selections[0].perk;
+            const primaryTree = state.runes.find(r => r.id === primaryStyle.style);
+            if (primaryTree && primaryTree.slots && primaryTree.slots[0]) {
+              const perkObj = primaryTree.slots[0].runes.find(r => r.id === primaryPerkId);
+              if (perkObj) rune1Img = `https://ddragon.leagueoflegends.com/cdn/img/${perkObj.icon}`;
+            }
+          }
+          if (subStyle) {
+            const subTree = state.runes.find(r => r.id === subStyle.style);
+            if (subTree) rune2Img = `https://ddragon.leagueoflegends.com/cdn/img/${subTree.icon}`;
+          }
+        }
+
+        // 아이템 6칸 + 장신구 1칸
+        const itemIds = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5];
+        const trinketId = p.item6;
+        
+        const itemsHtml = itemIds.map(id => id > 0 
+          ? `<div class="detail-item-slot"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${id}.png"></div>` 
+          : `<div class="detail-item-slot empty"></div>`
+        ).join('');
+        const trinketHtml = trinketId > 0 
+          ? `<div class="detail-item-slot trinket-slot"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${trinketId}.png"></div>` 
+          : `<div class="detail-item-slot empty trinket-slot"></div>`;
+
+        // OP Score 등수
+        const isMvpOrAce = p.customRank === 1;
+        const badgeText = isMvpOrAce ? (teamWon ? 'MVP' : 'ACE') : `${p.customRank}th`;
+        const badgeClass = isMvpOrAce ? (teamWon ? 'badge-mvp' : 'badge-ace') : 'badge-normal';
+        const formattedScore = p.customScore.toFixed(1);
+
+        // KDA 및 킬관여율
+        const kp = teamKills > 0 ? Math.round(((p.kills + p.assists) / teamKills) * 100) : 0;
+
+        // 피해량 비율
+        const dealPct = Math.min((p.totalDamageDealtToChampions / maxDamage) * 100, 100);
+        const takenPct = Math.min((p.totalDamageTaken / maxDamageTaken) * 100, 100);
+
         return `
           <tr class="${isMe ? 'is-me' : ''}">
-            <td><div class="td-champ"><img src="${cImg}"><span class="champ-name">${p.championName}</span></div></td>
-            <td class="td-summoner"><span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span></td>
-            <td class="td-kda">${p.kills}/${p.deaths}/${p.assists} <span style="font-size:11px;color:var(--text-sub)">(${c_kda})</span></td>
-            <td>${c_cs}</td>
-            <td>${p.totalDamageDealtToChampions.toLocaleString()}</td>
-            <td><div class="td-items">${itms}</div></td>
+            <td>
+              <div class="td-champ-info-wrapper">
+                <div class="td-champ-avatar-box">
+                  <img src="${cImg}" class="champ-avatar">
+                  <span class="champ-level-badge">${p.champLevel}</span>
+                </div>
+                <div class="td-spells-box">
+                  ${spell1Img ? `<img src="${spell1Img}" class="detail-spell" title="스펠1">` : `<div class="detail-spell empty"></div>`}
+                  ${spell2Img ? `<img src="${spell2Img}" class="detail-spell" title="스펠2">` : `<div class="detail-spell empty"></div>`}
+                </div>
+                <div class="td-runes-box">
+                  ${rune1Img ? `<img src="${rune1Img}" class="detail-rune" title="핵심 룬">` : `<div class="detail-rune empty"></div>`}
+                  ${rune2Img ? `<img src="${rune2Img}" class="detail-rune" title="보조 룬">` : `<div class="detail-rune empty"></div>`}
+                </div>
+                <div class="td-summoner-name-box">
+                  <div class="summoner-name-link">
+                    <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
+                  </div>
+                  <div class="summoner-level-txt">Lv.${p.summonerLevel}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="td-opscore-box">
+                <span class="opscore-num">${formattedScore}</span>
+                <span class="opscore-badge ${badgeClass}">${badgeText}</span>
+              </div>
+            </td>
+            <td>
+              <div class="td-kda-box">
+                <div class="kda-nums">${p.kills}/${p.deaths}/${p.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
+                <div class="kda-ratio-txt">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
+              </div>
+            </td>
+            <td>
+              <div class="td-damage-box">
+                <div class="damage-values">
+                  <span class="deal-val" title="가한 피해량">${p.totalDamageDealtToChampions.toLocaleString()}</span>
+                  <span class="taken-val" title="받은 피해량">${p.totalDamageTaken.toLocaleString()}</span>
+                </div>
+                <div class="damage-bars-track">
+                  <div class="dmg-bar deal" style="width: ${dealPct}%"></div>
+                  <div class="dmg-bar taken" style="width: ${takenPct}%"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="td-ward-box">
+                <div class="ward-control-buy" title="제어 와드 구매량">${p.visionWardsBoughtInGame || 0}</div>
+                <div class="ward-placed-killed" title="설치 / 제거">${p.wardsPlaced || 0} / ${p.wardsKilled || 0}</div>
+              </div>
+            </td>
+            <td>
+              <div class="td-cs-box">
+                <div class="cs-total-num">${c_cs}</div>
+                <div class="cs-per-min-txt">분당 ${csPerMin}</div>
+              </div>
+            </td>
+            <td>
+              <div class="td-items-container">
+                ${itemsHtml}
+                ${trinketHtml}
+              </div>
+            </td>
           </tr>
         `;
       }).join('');
@@ -2208,7 +2387,17 @@ function renderMatchList() {
       return `
         <div class="team-table-header ${teamColor}">팀 (${rLabel})</div>
         <table class="team-table">
-          <thead><tr><th>챔피언</th><th>소환사</th><th>KDA</th><th>CS</th><th>피해량</th><th>아이템</th></tr></thead>
+          <thead>
+            <tr>
+              <th>챔피언</th>
+              <th style="width: 80px;">OP Score</th>
+              <th style="width: 120px;">KDA</th>
+              <th style="width: 140px;">피해량</th>
+              <th style="width: 80px;">와드</th>
+              <th style="width: 80px;">CS</th>
+              <th>아이템</th>
+            </tr>
+          </thead>
           <tbody>${rows}</tbody>
         </table>
       `;
@@ -2270,6 +2459,7 @@ function renderMatchList() {
       </div>
       <div class="match-detail-accordion">
         ${renderDetailTable(blueTeam, 'blue', blueWin)}
+        ${renderSummaryBar(blueTeam, redTeam)}
         ${renderDetailTable(redTeam, 'red', redWin)}
       </div>
     `;

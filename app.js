@@ -644,23 +644,22 @@ function showItemDetail(itemId) {
 
 // 조합법 내 아이템 클릭 시 바로가기용 전역 함수 바인딩
 window.selectById = function(id) {
-  // 아이템 탭 중에 있는지 확인
+  // 아이템 리스트 중에 있는 경우에만 선택 가능
   const itemExists = state.items.some(i => i.id === id);
-  if (itemExists) {
-    if (state.currentTab !== 'items') {
-      document.getElementById('tab-items').click();
-    }
-    showItemDetail(id);
-  }
-};
+  if (!itemExists) return;
 
-window.searchSummonerFromLink = function(gameName, tagLine) {
-  if (!gameName) return;
-  const tag = tagLine || 'KR1';
-  const query = `${gameName}#${tag}`;
-  document.getElementById('match-search-input').value = query;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  document.getElementById('match-search-btn').click();
+  state.selectedId = id;
+  
+  // 목록 렌더링을 다시 돌려서 활성화를 유지하거나, 스크롤을 이동
+  renderList();
+  
+  const targetCard = document.querySelector(`.card-item[data-id="${id}"]`);
+  if (targetCard) {
+    targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    targetCard.classList.add('selected');
+  }
+  
+  showDetail(id);
 };
 
 // HTML 태그 정제 (스킬 설명 내 깨진 툴팁 또는 원시 태그 정리)
@@ -2174,16 +2173,12 @@ function renderMatchList() {
     }
 
     function renderParticipants(team) {
-      return team.map(p => {
-        const gameName = p.riotIdGameName || p.summonerName || '알 수 없음';
-        const tagLine = p.riotIdTagline || 'KR1';
-        return `
+      return team.map(p => `
         <div class="p-player ${p.puuid === puuid ? 'is-me' : ''}">
           <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png">
-          <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
+          <span>${p.riotIdGameName || p.summonerName || '알 수 없음'}</span>
         </div>
-      `;
-      }).join('');
+      `).join('');
     }
 
     // 아코디언 테이블 HTML 생성 (기존 showMatchDetail 통합)
@@ -2194,6 +2189,8 @@ function renderMatchList() {
         const cImg = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png`;
         const c_cs = p.totalMinionsKilled + (p.neutralMinionsKilled || 0);
         const c_kda = p.deaths === 0 ? 'Perfect' : ((p.kills + p.assists) / p.deaths).toFixed(2);
+        const gameName = p.riotIdGameName || p.summonerName || '';
+        const tagLine = p.riotIdTagline || 'KR1';
         
         const itms = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6].map(id => id > 0 ? `<img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${id}.png">` : '<div class="item-empty"></div>').join('');
         return `

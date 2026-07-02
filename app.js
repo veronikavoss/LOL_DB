@@ -2126,7 +2126,7 @@ function renderMatchList() {
     const blueTeam = info.participants.filter(p => p.teamId === 100);
     const redTeam = info.participants.filter(p => p.teamId === 200);
 
-    let questHtml = `<div class="item-slot ward-slot empty-ward"></div>`;
+    let questHtml = `<div class="item-slot quest-slot empty-quest"></div>`;
     if (me.teamPosition) {
       let questImgUrl = '';
       let questTitle = '';
@@ -2154,8 +2154,8 @@ function renderMatchList() {
       }
       if (questImgUrl) {
         questHtml = `
-          <div class="item-slot ward-slot" title="${questTitle}">
-            <img src="${questImgUrl}" style="border-radius:4px;">
+          <div class="item-slot quest-slot" title="${questTitle}">
+            <img src="${questImgUrl}">
           </div>
         `;
       }

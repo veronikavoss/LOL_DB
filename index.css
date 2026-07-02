@@ -1412,32 +1412,13 @@ body {
 .item-slot.trinket { border-radius: 50%; overflow: hidden; }
 .item-slot.trinket img { border-radius: 50%; }
 
-.ward-slot {
+.quest-slot {
   position: relative;
-  border-radius: 50%;
   overflow: visible;
 }
-.ward-slot img {
-  border-radius: 50%;
-}
-.ward-slot.empty-ward img {
+.quest-slot.empty-quest {
   opacity: 0.3;
   filter: grayscale(100%);
-}
-.ward-count {
-  position: absolute;
-  bottom: -4px;
-  right: -4px;
-  background-color: var(--bg-secondary);
-  color: #e84057;
-  font-size: 9px;
-  line-height: 1;
-  padding: 2px;
-  border-radius: 50%;
-  font-weight: 700;
-  border: 1px solid var(--border-color);
-  min-width: 14px;
-  text-align: center;
 }
 
 /* 6. 참가자 10명 리스트 */

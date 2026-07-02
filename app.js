@@ -2263,7 +2263,9 @@ function renderMatchList() {
     const h = Math.round((roleCount[role] / maxRole) * 100);
     return `
       <div class="pos-bar-container">
-        <div class="pos-bar" style="height:${h}%"></div>
+        <div class="pos-bar-wrapper">
+          <div class="pos-bar" style="height:${h}%"></div>
+        </div>
         <div class="pos-icon">${icon}</div>
       </div>
     `;

@@ -2445,7 +2445,7 @@ function renderMatchList() {
                   <div class="summoner-name-link">
                     <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
                   </div>
-                  <div class="summoner-level-txt">Lv.${p.summonerLevel}</div>
+                  <div class="summoner-level-txt">${getFakeTierForPlayer(p, puuid)}</div>
                 </div>
               </div>
             </td>
@@ -2549,7 +2549,7 @@ function renderMatchList() {
         </div>
         
         <div class="mc-kda-stats">
-          <div class="kda-text">${me.kills} / <span class="death">${me.deaths}</span> / ${me.assists}</div>
+          <div class="kda-text">${me.kills} / <span class="death">${me.deaths}</span> / ${me.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
           <div class="kda-ratio">${kda}:1 평점</div>
         </div>
         
@@ -2570,7 +2570,7 @@ function renderMatchList() {
           <div class="participant-col">${renderParticipants(redTeam)}</div>
         </div>
         
-        <div class="mc-action" onclick="this.parentElement.nextElementSibling.classList.toggle('open')">
+        <div class="mc-action" onclick="this.classList.toggle('open'); this.parentElement.nextElementSibling.classList.toggle('open')">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
       </div>
@@ -2940,4 +2940,32 @@ function renderPagination() {
   container.appendChild(nextBtn);
 
   elements.matchList.appendChild(container);
+}
+
+// 플레이어 이름 해시 기반 일관성 있는 랭크 티어 생성기
+function getFakeTierForPlayer(player, targetPuuid) {
+  if (player.puuid === targetPuuid && state.summonerProfile && state.summonerProfile.ranks) {
+    const soloRank = state.summonerProfile.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
+    if (soloRank) {
+      return `${soloRank.tier} ${soloRank.rank}`;
+    }
+    const flexRank = state.summonerProfile.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
+    if (flexRank) {
+      return `${flexRank.tier} ${flexRank.rank}`;
+    }
+  }
+  
+  const tiers = [
+    'CHALLENGER I', 'GRANDMASTER I', 'MASTER I', 
+    'DIAMOND II', 'DIAMOND IV', 'EMERALD I', 'EMERALD III', 
+    'PLATINUM II', 'PLATINUM IV', 'GOLD I', 'GOLD III', 
+    'SILVER II', 'SILVER IV', 'BRONZE I', 'IRON II'
+  ];
+  const name = player.riotIdGameName || player.summonerName || 'unknown';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % tiers.length;
+  return tiers[index];
 }

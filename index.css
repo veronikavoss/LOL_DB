@@ -1193,7 +1193,7 @@ body {
 .position-bars {
   display: flex;
   gap: 10px;
-  height: 60px;
+  height: 120px;
   align-items: flex-end;
 }
 
@@ -1862,22 +1862,12 @@ body {
   pointer-events: none;
 }
 
-/* 독립된 퀘스트 슬롯 관련 CSS 추가 */
 .quest-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 4px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  padding-left: 6px;
-}
-
-.detail-quest-divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 0 4px;
-  flex-shrink: 0;
+  margin-left: 10px; /* 게임 정보 패널과의 간격 */
+  margin-right: 4px;  /* 챔피언 초상화와의 간격 */
 }
 
 .detail-item-slot.quest-slot {

@@ -2428,6 +2428,7 @@ function renderMatchList() {
           <tr class="${isMe ? 'is-me' : ''}">
             <td>
               <div class="td-champ-info-wrapper">
+                ${pQuestHtml}
                 <div class="td-champ-avatar-box">
                   <img src="${cImg}" class="champ-avatar">
                   <span class="champ-level-badge">${p.champLevel}</span>
@@ -2489,8 +2490,6 @@ function renderMatchList() {
                 ${itemsHtml}
                 ${detailWardHtml}
                 ${trinketHtml}
-                <div class="detail-quest-divider"></div>
-                ${pQuestHtml}
               </div>
             </td>
           </tr>
@@ -2530,6 +2529,10 @@ function renderMatchList() {
           <div class="duration">${gameDuration}</div>
         </div>
         
+        <div class="quest-container">
+          ${questHtml}
+        </div>
+        
         <div class="mc-champion">
           <div class="champ-img-wrap">
             <img src="${champImg}">
@@ -2560,9 +2563,6 @@ function renderMatchList() {
             ${wardHtml}
             ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]}
             ${trinketHtml}
-          </div>
-          <div class="quest-container">
-            ${questHtml}
           </div>
         </div>
         <div class="mc-participants">

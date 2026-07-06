@@ -22,7 +22,8 @@ const state = {
   matchIds: [],            // 매치 ID 배열
   matchDetails: {},        // { matchId: matchData } 캐시
   selectedMatchId: null,   // 선택된 매치 ID
-  matchSearching: false    // 검색 진행 중 플래그
+  matchSearching: false,   // 검색 진행 중 플래그
+  matchPage: 1             // 전적 검색 현재 페이지
 };
 
 // 역할군 영문 -> 국문 매핑
@@ -295,6 +296,7 @@ function setupEventListeners() {
     const name = params.get('name');
     const tag = params.get('tag');
     if (name && tag) {
+      state.matchPage = 1;
       switchTab('match');
       elements.matchSearchInput.value = `${name}#${tag}`;
       handleMatchSearch();
@@ -1894,6 +1896,9 @@ async function handleMatchSearch() {
   const input = elements.matchSearchInput.value.trim();
   if (!input || state.matchSearching) return;
 
+  // 새로운 검색이므로 1페이지로 리셋
+  state.matchPage = 1;
+
   // 소환사명#태그 파싱 (태그가 없으면 기본값 #KR1 자동 추가)
   let query = input;
   if (!query.includes('#')) {
@@ -2074,8 +2079,11 @@ async function loadMatchHistory(puuid) {
     </div>
   `;
 
-  // 매치 ID 목록 가져오기
-  const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?count=20`);
+  // 페이지에 기반한 start 계산
+  const start = (state.matchPage - 1) * 20;
+
+  // 매치 ID 목록 가져오기 (start 쿼리 파라미터 적용)
+  const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?start=${start}&count=20`);
   if (!matchIdsRes.ok) throw new Error('매치 목록을 가져올 수 없습니다.');
   const matchIds = await matchIdsRes.json();
   state.matchIds = matchIds;
@@ -2601,11 +2609,15 @@ function renderMatchList() {
   }).join('');
 
   // 포지션 바그래프
+  const totalPosGames = Object.values(roleCount).reduce((a, b) => a + b, 0);
   const maxRole = Math.max(...Object.values(roleCount), 1);
   const renderPosBar = (role, icon) => {
-    const h = Math.round((roleCount[role] / maxRole) * 100);
+    const count = roleCount[role] || 0;
+    const percent = totalPosGames > 0 ? Math.round((count / totalPosGames) * 100) : 0;
+    const h = Math.round((count / maxRole) * 100);
     return `
-      <div class="pos-bar-container">
+      <div class="pos-bar-container" title="${icon}: ${count}게임 (${percent}%)">
+        <div class="pos-bar-percent">${percent}%</div>
         <div class="pos-bar-wrapper">
           <div class="pos-bar" style="height:${h}%"></div>
         </div>
@@ -2647,6 +2659,9 @@ function renderMatchList() {
 
   // 매치 리스트 DOM 추가
   matchElements.forEach(el => elements.matchList.appendChild(el));
+
+  // 페이지네이션 바 추가
+  renderPagination();
 }
 
 // 자동완성: 최근 검색어 저장
@@ -2833,4 +2848,96 @@ function hideAutocomplete() {
   setTimeout(() => {
     elements.matchAutocompleteList.classList.add('hidden');
   }, 200); // 아이템 클릭 이벤트가 먼저 실행되도록 약간 지연
+}
+
+// 전적 페이지 전환 기능
+async function changeMatchPage(page) {
+  if (state.matchSearching || state.matchPage === page) return;
+  
+  // 페이지 번호 갱신
+  state.matchPage = page;
+  
+  const puuid = state.summonerProfile?.puuid;
+  if (!puuid) return;
+
+  state.matchSearching = true;
+  elements.matchSearchBtn.disabled = true;
+  elements.matchSearchBtn.textContent = '검색 중...';
+  
+  // 화면 상단 대시보드로 자연스러운 스크롤 포커스 이동
+  const scrollTarget = document.getElementById('match-dashboard');
+  if (scrollTarget) {
+    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  try {
+    // 프로필 정보는 놔두고 전적 리스트만 오프셋에 맞추어 새로 로드
+    await loadMatchHistory(puuid);
+  } catch (error) {
+    elements.matchList.innerHTML = `
+      <div class="match-error">
+        <p>❌ 전적 목록 로드 실패: ${error.message}</p>
+      </div>
+    `;
+  } finally {
+    state.matchSearching = false;
+    elements.matchSearchBtn.disabled = false;
+    elements.matchSearchBtn.textContent = '검색';
+  }
+}
+window.changeMatchPage = changeMatchPage;
+
+// 페이지네이션 바 렌더러
+function renderPagination() {
+  // 기존 페이지네이션이 있는 경우 중복 생성 방지를 위해 제거
+  const existPg = document.getElementById('match-pagination');
+  if (existPg) existPg.remove();
+
+  const container = document.createElement('div');
+  container.className = 'pagination-container';
+  container.id = 'match-pagination';
+
+  const currentPage = state.matchPage || 1;
+  const hasNextPage = state.matchIds && state.matchIds.length === 20;
+
+  // 1. '이전' 버튼
+  const prevBtn = document.createElement('button');
+  prevBtn.className = `pg-btn prev-btn ${currentPage === 1 ? 'disabled' : ''}`;
+  prevBtn.innerHTML = '&lt; 이전';
+  if (currentPage > 1) {
+    prevBtn.addEventListener('click', () => changeMatchPage(currentPage - 1));
+  }
+  container.appendChild(prevBtn);
+
+  // 2. 페이지 번호 버튼들 (기본적으로 최소 5페이지를 보여주거나 현재 페이지 뒤에 1페이지 여유를 두고 렌더링)
+  const maxPages = hasNextPage ? Math.max(currentPage + 1, 5) : currentPage;
+  const endPage = Math.max(maxPages, 5); // 최소 5페이지까지 번호 생성
+
+  for (let i = 1; i <= endPage; i++) {
+    const pageBtn = document.createElement('button');
+    pageBtn.className = `pg-btn num-btn ${currentPage === i ? 'active' : ''}`;
+    
+    // 현재 페이지보다 더 뒷번호인데 다음 페이지가 존재하지 않는 마지막 단계라면 클릭할 수 없도록 비활성화
+    const isClickable = i <= currentPage || (i > currentPage && hasNextPage);
+    if (!isClickable) {
+      pageBtn.classList.add('disabled');
+    }
+    
+    pageBtn.textContent = i;
+    if (currentPage !== i && isClickable) {
+      pageBtn.addEventListener('click', () => changeMatchPage(i));
+    }
+    container.appendChild(pageBtn);
+  }
+
+  // 3. '다음' 버튼
+  const nextBtn = document.createElement('button');
+  nextBtn.className = `pg-btn next-btn ${!hasNextPage ? 'disabled' : ''}`;
+  nextBtn.innerHTML = '다음 &gt;';
+  if (hasNextPage) {
+    nextBtn.addEventListener('click', () => changeMatchPage(currentPage + 1));
+  }
+  container.appendChild(nextBtn);
+
+  elements.matchList.appendChild(container);
 }

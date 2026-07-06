@@ -77,8 +77,9 @@ app.get('/api/riot/league/:puuid', async (req, res) => {
 app.get('/api/riot/matches/:puuid', async (req, res) => {
   try {
     const { puuid } = req.params;
+    const start = req.query.start || 0;
     const count = req.query.count || 20;
-    const url = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
+    const url = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
     const data = await riotApiRequest(url);
     res.json(data);
   } catch (error) {

@@ -2127,6 +2127,7 @@ async function loadMatchHistory(puuid) {
 
   // 전적 리스트 렌더링
   renderMatchList();
+  saveDiscoveredSummoners();
 }
 
 // 전적 리스트 렌더링 (20게임 요약 + 대시보드 리스트)
@@ -2693,31 +2694,96 @@ function deleteRecentSearch(query, event) {
   showAutocomplete();
 }
 
+const PREDEFINED_SUMMONERS = [
+  "Hide on bush#KR1",
+  "ShowMaker#KR1",
+  "Chovy#KR1",
+  "Canyon#KR1",
+  "Ruler#KR1",
+  "Deft#KR1",
+  "Gumayusi#KR1",
+  "Keria#KR1",
+  "Zeus#KR1",
+  "Oner#KR1",
+  "아이스크림 닌자#0325"
+];
+
+function saveDiscoveredSummoners() {
+  const key = 'lol-db-discovered-summoners';
+  let discovered = [];
+  try {
+    discovered = JSON.parse(localStorage.getItem(key)) || [];
+    if (!Array.isArray(discovered)) discovered = [];
+  } catch (e) {
+    discovered = [];
+  }
+
+  const set = new Set(discovered);
+  
+  Object.values(state.matchDetails).forEach(match => {
+    if (match && match.info && match.info.participants) {
+      match.info.participants.forEach(p => {
+        const gameName = p.riotIdGameName || p.summonerName;
+        const tagLine = p.riotIdTagline || 'KR1';
+        if (gameName) {
+          set.add(`${gameName}#${tagLine}`);
+        }
+      });
+    }
+  });
+
+  localStorage.setItem(key, JSON.stringify(Array.from(set)));
+}
+
 // 자동완성: 목록 노출 및 렌더링
 function showAutocomplete() {
   const listEl = elements.matchAutocompleteList;
   const inputVal = elements.matchSearchInput.value.trim().toLowerCase();
   
-  const key = 'lol-db-recent-searches';
-  let searches = [];
+  // 1. 최근 검색어 가져오기
+  let recentSearches = [];
   try {
-    searches = JSON.parse(localStorage.getItem(key)) || [];
-    if (!Array.isArray(searches)) searches = [];
+    recentSearches = JSON.parse(localStorage.getItem('lol-db-recent-searches')) || [];
+    if (!Array.isArray(recentSearches)) recentSearches = [];
   } catch (e) {
-    searches = [];
+    recentSearches = [];
   }
   
-  // 입력값이 있으면 최근 검색어 중 매칭되는 항목 필터링 (로컬 자동완성)
-  const filtered = inputVal
-    ? searches.filter(s => s.toLowerCase().includes(inputVal))
-    : searches;
-    
+  // 2. 발견된 소환사 가져오기
+  let discoveredSummoners = [];
+  try {
+    discoveredSummoners = JSON.parse(localStorage.getItem('lol-db-discovered-summoners')) || [];
+    if (!Array.isArray(discoveredSummoners)) discoveredSummoners = [];
+  } catch (e) {
+    discoveredSummoners = [];
+  }
+
+  // 3. 전체 추천 풀 구성 (중복 제거)
+  const allSummonersSet = new Set([
+    ...recentSearches,
+    ...PREDEFINED_SUMMONERS,
+    ...discoveredSummoners
+  ]);
+  const allSummoners = Array.from(allSummonersSet);
+
+  let filtered = [];
+  if (inputVal) {
+    filtered = allSummoners.filter(query => {
+      const name = query.split('#')[0].toLowerCase();
+      const tag = (query.split('#')[1] || '').toLowerCase();
+      const full = query.toLowerCase();
+      return name.includes(inputVal) || tag.includes(inputVal) || full.includes(inputVal);
+    });
+  } else {
+    filtered = recentSearches;
+  }
+  
   if (filtered.length === 0) {
     if (!inputVal) {
       listEl.innerHTML = '<div class="autocomplete-empty">최근 검색어가 없습니다.</div>';
       listEl.classList.remove('hidden');
     } else {
-      listEl.classList.add('hidden'); // 매칭 검색어가 없으면 닫음
+      listEl.classList.add('hidden');
     }
     return;
   }
@@ -2727,30 +2793,34 @@ function showAutocomplete() {
     const parts = query.split('#');
     const name = parts[0];
     const tag = parts[1] || '';
+    const isRecent = recentSearches.includes(query);
     
     const item = document.createElement('div');
     item.className = 'autocomplete-item';
     
+    const icon = isRecent ? '🕒' : '👤';
+    
     item.innerHTML = `
       <div class="autocomplete-info">
+        <span style="margin-right: 8px; opacity: 0.6; font-size: 12px;">${icon}</span>
         <span class="autocomplete-name">${name}</span>
         <span class="autocomplete-tag">#${tag}</span>
       </div>
-      <button class="autocomplete-delete-btn" title="삭제">&times;</button>
+      ${isRecent ? '<button class="autocomplete-delete-btn" title="삭제">&times;</button>' : ''}
     `;
     
-    // 클릭 시 바로 검색
     item.addEventListener('click', () => {
       elements.matchSearchInput.value = query;
       listEl.classList.add('hidden');
       handleMatchSearch();
     });
     
-    // 삭제 버튼 이벤트
-    const deleteBtn = item.querySelector('.autocomplete-delete-btn');
-    deleteBtn.addEventListener('click', (e) => {
-      deleteRecentSearch(query, e);
-    });
+    if (isRecent) {
+      const deleteBtn = item.querySelector('.autocomplete-delete-btn');
+      deleteBtn.addEventListener('click', (e) => {
+        deleteRecentSearch(query, e);
+      });
+    }
     
     listEl.appendChild(item);
   });

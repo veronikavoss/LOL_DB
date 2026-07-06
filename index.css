@@ -1440,8 +1440,8 @@ body {
   padding: 0 8px;
   display: flex;
   gap: 8px;
-  flex: 1;
-  min-width: 0;
+  width: 170px;
+  flex: none;
   font-size: 11px;
   justify-content: flex-end;
 }

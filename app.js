@@ -98,7 +98,8 @@ const elements = {
   matchDashboard: document.getElementById('match-dashboard'),
   rankInfo: document.getElementById('rank-info'),
   matchSummaryWidget: document.getElementById('match-summary-widget'),
-  matchList: document.getElementById('match-list')
+  matchList: document.getElementById('match-list'),
+  headerLogo: document.getElementById('header-logo')
 };
 
 // 초기화
@@ -221,6 +222,24 @@ function setupEventListeners() {
   elements.tabChampions.addEventListener('click', () => switchTab('champions'));
   elements.tabItems.addEventListener('click', () => switchTab('items'));
   elements.tabMatch.addEventListener('click', () => switchTab('match'));
+
+  // 로고 클릭 시 첫 화면(챔피언 도감 홈)으로 이동 및 상태 리셋
+  elements.headerLogo.addEventListener('click', () => {
+    // 1. 소환사 검색 인풋 및 전적 목록 초기화
+    elements.matchSearchInput.value = '';
+    elements.summonerProfileHeader.classList.add('hidden');
+    elements.matchDashboard.classList.add('hidden');
+    elements.matchList.innerHTML = '';
+    elements.matchSummaryWidget.innerHTML = '';
+
+    // 2. URL 파라미터 제거 및 히스토리 푸시 (메인 상태로)
+    if (location.search) {
+      history.pushState(null, '', location.pathname);
+    }
+
+    // 3. 챔피언 도감 탭으로 강제 전환
+    switchTab('champions');
+  });
 
   // 검색 입력
   elements.searchInput.addEventListener('input', (e) => {
@@ -715,6 +734,48 @@ function cleanHtml(html) {
     .replace(/<status>(.*?)<\/status>/gi, '<span style="color:#00e5ff;">$1</span>')
     .replace(/<physicalDamage>(.*?)<\/physicalDamage>/gi, '<span style="color:#ffaa00; font-weight:600;">$1</span>')
     .replace(/<magicDamage>(.*?)<\/magicDamage>/gi, '<span style="color:#3b82f6; font-weight:600;">$1</span>');
+}
+
+function getPositionIconSvg(position) {
+  switch (position) {
+    case 'TOP':
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="position-icon-svg" style="width:16px;height:16px;">
+          <path fill="#8b5cf6" fill-rule="evenodd" d="M19 3H3v16l4-4V7h8z" clip-rule="evenodd"></path>
+          <path fill="#515163" fill-rule="evenodd" d="M5 21h16V5l-4 4v8H9z" clip-rule="evenodd"></path>
+          <path fill="#515163" d="M10 10h4v4h-4z"></path>
+        </svg>
+      `;
+    case 'JUNGLE':
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="position-icon-svg" style="width:16px;height:16px;">
+          <path fill="#10b981" fill-rule="evenodd" d="M12.116 22s1.396-5.116 0-10.046S6.721 3.209 5.14 2c0 0 2.418 6.698 2.79 11.07 0 0-1.394-3.412-4.93-4.28 0 0 2.45 5.024 2.916 7.815 0 0 3.317 2.077 6.2 5.395m2.318-7.237a27.5 27.5 0 0 1 .207 5.335c1.644-1.282 3.382-3.679 3.382-3.679S18 14.5 18.5 12.5C19.04 10.34 21 8 21 8c-3.92.98-5.571 4.59-6.509 6.64zm.438-4.463c-.379.584-.73 1.166-1.05 1.733l-.037-.15q-.027-.112-.058-.225a21 21 0 0 0-1.16-3.08l.023-.062c.045-.125.09-.25.147-.376 0 0 1.813-3.78 5.255-5.564 0 0-2.325 3.052-2.837 6.029-.107.63-.198 1.183-.28 1.68z" clip-rule="evenodd"></path>
+        </svg>
+      `;
+    case 'MIDDLE':
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="position-icon-svg" style="width:16px;height:16px;">
+          <path fill="#515163" fill-rule="evenodd" d="m11 7 4-4H3v12l4-4V7zM13 17l-4 4h12V9l-4 4v4z" clip-rule="evenodd"></path>
+          <path fill="#3b82f6" fill-rule="evenodd" d="M18 3h3v3L6 21H3v-3z" clip-rule="evenodd"></path>
+        </svg>
+      `;
+    case 'BOTTOM':
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="position-icon-svg" style="width:16px;height:16px;">
+          <path fill="#515163" fill-rule="evenodd" d="M19 3H3v16l4-4V7h8z" clip-rule="evenodd"></path>
+          <path fill="#ef4444" fill-rule="evenodd" d="M5 21h16V5l-4 4v8H9z" clip-rule="evenodd"></path>
+          <path fill="#515163" d="M10 10h4v4h-4z"></path>
+        </svg>
+      `;
+    case 'UTILITY':
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="position-icon-svg" style="width:16px;height:16px;">
+          <path fill="#f97316" fill-rule="evenodd" d="M9.5 4.833 10.257 4h3.486l.757.833v.834l-1.667 2.5h-1.666L9.5 5.667zm0 12.696 1.667-7.696h1.666L14.5 17.53v.804L12.833 20h-1.666L9.5 18.333zM3.667 9h2.5l-.834 1.667 2.5 2.5L9.5 9 7 6.5H2zm14.166 0h2.5L22 6.5h-5L14.5 9l1.667 4.167 2.5-2.5z" clip-rule="evenodd"></path>
+        </svg>
+      `;
+    default:
+      return '';
+  }
 }
 
 // 초기화 시작
@@ -2362,44 +2423,11 @@ function renderMatchList() {
         // 개별 플레이어 퀘스트 보상 정보
         let pQuestHtml = `<div class="detail-item-slot quest-slot empty"></div>`;
         if (p.teamPosition) {
-          let questImgUrl = '';
-          let questTitle = '';
-          
-          const hasTeleport = p.summoner1Id === 12 || p.summoner2Id === 12;
-          const hasSmite = p.summoner1Id === 11 || p.summoner2Id === 11;
-          const isQuestTime = info.gameDuration > 720;
-          
-          if (isQuestTime) {
-            switch(p.teamPosition) {
-              case 'TOP':
-                if (hasTeleport) {
-                  questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerTeleport.png`;
-                  questTitle = '탑 보상: 강력 순간이동';
-                }
-                break;
-              case 'JUNGLE':
-                if (hasSmite) {
-                  questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/SummonerSmite.png`;
-                  questTitle = '정글 보상: 강력 강타';
-                }
-                break;
-              case 'MIDDLE':
-                questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/3363.png`;
-                questTitle = '미드 보상: 강화 귀환';
-                break;
-              case 'BOTTOM':
-                questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/1001.png`;
-                questTitle = '원딜 보상: 장화 전용 슬롯';
-                break;
-              case 'UTILITY':
-                questImgUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png`;
-                questTitle = '서폿 보상: 제어 와드 전용 슬롯';
-                break;
-            }
-          }
-          if (questImgUrl) {
-            pQuestHtml = `<div class="detail-item-slot quest-slot" title="${questTitle}"><img src="${questImgUrl}"></div>`;
-          }
+          pQuestHtml = `
+            <div class="detail-item-slot quest-slot position-badge" title="${p.teamPosition}">
+              ${getPositionIconSvg(p.teamPosition)}
+            </div>
+          `;
         }
 
         // OP Score 등수

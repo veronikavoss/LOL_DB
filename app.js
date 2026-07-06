@@ -69,7 +69,8 @@ const ITEM_TAG_MAP = {
   'CriticalStrike': '치명타',
   'AttackSpeed': '공격 속도',
   'LifeSteal': '생명력 흡수',
-  'Haste': '스킬 가속',
+  'AbilityHaste': '스킬 가속',
+  'CooldownReduction': '스킬 가속',
   'Boots': '장화'
 };
 
@@ -357,7 +358,11 @@ function renderFilters() {
   elements.filterGroup.innerHTML = '';
   const map = state.currentTab === 'champions' ? CHAMPION_TAG_MAP : ITEM_TAG_MAP;
 
+  const seenValues = new Set();
   Object.entries(map).forEach(([key, value]) => {
+    if (seenValues.has(value)) return;
+    seenValues.add(value);
+
     const btn = document.createElement('button');
     btn.className = `filter-btn ${state.activeFilter === key ? 'active' : ''}`;
     btn.textContent = value;
@@ -380,16 +385,9 @@ function renderList() {
   const list = isChamp ? state.champions : state.items;
 
   // 필터링 적용
-    // 1. 검색어 필터링 (초성 검색 및 일반 검색 모두 대응)
-    const nameLower = item.name.toLowerCase();
-    const queryLower = state.searchQuery.toLowerCase();
-    
-    let matchesSearch = nameLower.includes(queryLower);
-    
-    if (!matchesSearch && isChosungOnly(queryLower)) {
-      const nameChosung = getChosung(item.name);
-      matchesSearch = nameChosung.includes(queryLower);
-    }
+  const filteredList = list.filter(item => {
+    // 1. 검색어 필터링 (한글 자음 검색 대신 부분 일치 제공)
+    const matchesSearch = item.name.toLowerCase().includes(state.searchQuery.toLowerCase());
     
     // 2. 태그 필터링
     let matchesTag = true;
@@ -398,7 +396,11 @@ function renderList() {
         matchesTag = item.tags && item.tags.includes(state.activeFilter);
       } else {
         // 아이템의 경우 tags 배열에 해당 키워드가 포함되는지 체크
-        matchesTag = item.tags && item.tags.includes(state.activeFilter);
+        if (state.activeFilter === 'AbilityHaste') {
+          matchesTag = item.tags && (item.tags.includes('AbilityHaste') || item.tags.includes('CooldownReduction'));
+        } else {
+          matchesTag = item.tags && item.tags.includes(state.activeFilter);
+        }
       }
     }
 
@@ -783,39 +785,6 @@ function getPositionIconSvg(position) {
     default:
       return '';
   }
-}
-
-// 초성 검색용 헬퍼 함수
-function isChosungOnly(str) {
-  const chosungRegex = /^[ㄱ-ㅎ\s]+$/;
-  return chosungRegex.test(str);
-}
-
-function getChosung(str) {
-  const cho = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
-  let result = "";
-  for (let i = 0; i < str.length; i++) {
-    const code = str.charCodeAt(i) - 44032;
-    if (code > -1 && code < 11172) {
-      result += cho[Math.floor(code / 588)];
-    } else {
-      result += str.charAt(i);
-    }
-  }
-  return result;
-}
-
-// 멀티킬 뱃지 헬퍼 함수
-function getMultiKillBadgeHtml(p) {
-  let text = '';
-  let isHigh = false;
-  if (p.pentaKills > 0) { text = '펜타킬'; isHigh = true; }
-  else if (p.quadraKills > 0) { text = '쿼드라킬'; isHigh = true; }
-  else if (p.tripleKills > 0) text = '트리플킬';
-  else if (p.doubleKills > 0) text = '더블킬';
-  
-  if (!text) return '';
-  return `<span class="badge-multikill ${isHigh ? 'high-tier' : ''}">${text}</span>`;
 }
 
 // 초기화 시작
@@ -2480,7 +2449,6 @@ function renderMatchList() {
               <div class="td-kda-box">
                 <div class="kda-nums">${p.kills}/${p.deaths}/${p.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
                 <div class="kda-ratio-txt">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
-                ${getMultiKillBadgeHtml(p)}
               </div>
             </td>
             <td>
@@ -2571,7 +2539,6 @@ function renderMatchList() {
         <div class="mc-kda-stats">
           <div class="kda-text">${me.kills} / <span class="death">${me.deaths}</span> / ${me.assists}</div>
           <div class="kda-ratio">${kda}:1 평점</div>
-          ${getMultiKillBadgeHtml(me)}
         </div>
         
         <div class="mc-extra-stats">

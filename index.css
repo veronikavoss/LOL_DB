@@ -1251,6 +1251,7 @@ body {
 .match-card {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background: #282830;
   border-radius: 4px;
   overflow: hidden;
@@ -1360,7 +1361,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 95px;
+  width: 110px;
   flex-shrink: 0;
 }
 
@@ -1384,7 +1385,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 85px;
+  width: 90px;
   font-size: 11px;
   color: var(--text-sub);
   text-align: center;
@@ -1398,8 +1399,8 @@ body {
   padding: 0 4px;
   display: flex;
   align-items: center;
+  width: 96px;
   flex-shrink: 0;
-  margin-right: auto;
 }
 
 .items-container {
@@ -1441,7 +1442,7 @@ body {
   display: flex;
   gap: 8px;
   width: 170px;
-  flex: none;
+  flex-shrink: 0;
   font-size: 11px;
   justify-content: flex-end;
 }
@@ -1450,9 +1451,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
-  min-width: 75px;
   width: 75px;
+  flex-shrink: 0;
   overflow: hidden;
 }
 

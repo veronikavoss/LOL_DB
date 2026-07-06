@@ -1894,4 +1894,23 @@ body {
   display: block;
 }
 
+/* 멀티킬 뱃지 스타일 */
+.badge-multikill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+  color: #fff;
+  background-color: #e53e3e; /* 더블킬, 트리플킬 기본 레드 */
+  margin-top: 4px;
+  line-height: 1;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.badge-multikill.high-tier {
+  background-color: #c89b3c; /* 쿼드라킬, 펜타킬 골드 */
+}
+
 

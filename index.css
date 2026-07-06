@@ -1272,8 +1272,8 @@ body {
 
 /* 1. 게임 정보 바 */
 .mc-game-info {
-  width: 95px;
-  padding: 0 12px;
+  width: 80px;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1437,10 +1437,10 @@ body {
 
 /* 6. 참가자 10명 리스트 */
 .mc-participants {
-  padding: 0 8px;
+  padding: 0 8px 0 20px;
   display: flex;
   gap: 8px;
-  width: 170px;
+  width: 190px;
   flex-shrink: 0;
   font-size: 11px;
   justify-content: flex-end;
@@ -1874,8 +1874,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 10px; /* 게임 정보 패널과의 간격 */
-  margin-right: 4px;  /* 챔피언 초상화와의 간격 */
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .detail-item-slot.quest-slot {

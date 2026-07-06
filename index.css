@@ -1004,7 +1004,7 @@ body {
 .match-dashboard {
   display: flex;
   gap: 10px;
-  max-width: 1200px;
+  max-width: 1140px;
   width: 100%;
   margin: 10px auto;
   padding: 0 40px;
@@ -1017,7 +1017,7 @@ body {
 
 /* 좌측 랭크 사이드바 */
 .match-sidebar {
-  width: 260px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1217,9 +1217,9 @@ body {
 
 .pos-bar-wrapper {
   flex: 1;
-  width: 16px;
+  width: 20px;
   background-color: rgba(255, 255, 255, 0.05); /* 투명한 막대 배경 바 */
-  border-radius: 4px;
+  border-radius: 2px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1251,7 +1251,6 @@ body {
 .match-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: #282830;
   border-radius: 4px;
   overflow: hidden;
@@ -1445,6 +1444,7 @@ body {
   flex-shrink: 0;
   font-size: 11px;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .participant-col {

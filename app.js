@@ -2543,7 +2543,7 @@ function renderMatchList() {
         
         <div class="mc-kda-stats">
           <div class="kda-text">${me.kills} / <span class="death">${me.deaths}</span> / ${me.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
-          <div class="kda-ratio">${kda}:1 평점</div>
+          <div class="kda-ratio ${getScoreColorClass(kda)}">${kda === 'Perfect' ? 'Perfect' : kda + ':1'} 평점</div>
         </div>
         
         <div class="mc-extra-stats">

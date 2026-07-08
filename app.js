@@ -2452,7 +2452,7 @@ function renderMatchList() {
             <td>
               <div class="td-kda-box">
                 <div class="kda-nums">${p.kills}/${p.deaths}/${p.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
-                <div class="kda-ratio-txt ${getScoreColorClass(p.customScore, c_kda)}">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
+                <div class="kda-ratio-txt ${getScoreColorClass(c_kda)}">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
               </div>
             </td>
             <td>
@@ -2495,12 +2495,12 @@ function renderMatchList() {
         <table class="team-table">
           <thead>
             <tr>
-              <th style="width: 240px;">챔피언</th>
-              <th style="width: 120px;">KDA</th>
-              <th style="width: 130px;">피해량</th>
-              <th style="width: 60px;">와드</th>
-              <th style="width: 60px;">CS</th>
-              <th>아이템</th>
+              <th style="width: 220px;">챔피언</th>
+              <th style="width: 100px;">KDA</th>
+              <th style="width: 120px;">피해량</th>
+              <th style="width: 55px;">와드</th>
+              <th style="width: 55px;">CS</th>
+              <th style="width: 190px;">아이템</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -2937,11 +2937,13 @@ function renderPagination() {
 
 // 플레이어 이름 해시 기반 일관성 있는 랭크 티어 생성기
 
-// OP Score 색상 클래스 반환
-function getScoreColorClass(score, kda) {
+// KDA 평점 색상 클래스 반환
+function getScoreColorClass(kda) {
   if (kda === 'Perfect') return 'score-perfect';
-  if (score >= 8.0) return 'score-high';
-  if (score >= 5.0) return 'score-good';
+  const score = parseFloat(kda);
+  if (isNaN(score)) return 'score-low';
+  if (score >= 5.0) return 'score-high';
+  if (score >= 4.0) return 'score-good';
   if (score >= 3.0) return 'score-mid';
   return 'score-low';
 }

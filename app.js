@@ -2428,7 +2428,6 @@ function renderMatchList() {
           <tr class="${isMe ? 'is-me' : ''}">
             <td>
               <div class="td-champ-info-wrapper">
-                ${pQuestHtml}
                 <div class="td-champ-avatar-box">
                   <img src="${cImg}" class="champ-avatar">
                   <span class="champ-level-badge">${p.champLevel}</span>
@@ -2483,6 +2482,7 @@ function renderMatchList() {
               <div class="td-items-container">
                 ${itemsHtml}
                 ${trinketHtml}
+                ${pQuestHtml}
               </div>
             </td>
           </tr>
@@ -2499,7 +2499,7 @@ function renderMatchList() {
               <th style="width: 120px;">피해량</th>
               <th style="width: 55px;">와드</th>
               <th style="width: 55px;">CS</th>
-              <th style="width: 170px;">아이템</th>
+              <th style="width: 190px;">아이템</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -2519,10 +2519,6 @@ function renderMatchList() {
           <div class="divider"></div>
           <div class="result">${resultText}</div>
           <div class="duration">${gameDuration}</div>
-        </div>
-        
-        <div class="quest-container">
-          ${questHtml}
         </div>
         
         <div class="mc-champion">
@@ -2555,6 +2551,9 @@ function renderMatchList() {
             ${wardHtml}
             ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]}
             ${trinketHtml}
+          </div>
+          <div class="quest-container" style="margin-left: 2px;">
+            ${questHtml}
           </div>
         </div>
         <div class="mc-participants">

@@ -1537,6 +1537,7 @@ body {
   border-collapse: collapse;
   margin-bottom: 20px;
   font-size: 12px;
+  table-layout: fixed;
 }
 
 .team-table-header {
@@ -1624,7 +1625,8 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 90px;
+  min-width: 0;
+  flex: 1;
 }
 
 .summoner-name-link span {
@@ -1675,6 +1677,13 @@ body {
 .opscore-badge.badge-mvp { background: #e84057; }
 .opscore-badge.badge-ace { background: #3b82f6; }
 .opscore-badge.badge-normal { background: #4b5563; }
+
+/* OP Score 색상 등급 */
+.opscore-num.score-perfect { color: #7dd3fc; } /* 하늘색 - Perfect/10.0 */
+.opscore-num.score-high { color: #f87171; }    /* 붉은색 - 8.0+ */
+.opscore-num.score-good { color: #fb923c; }    /* 주황색 - 5.0+ */
+.opscore-num.score-mid { color: #facc15; }     /* 노란색 - 3.0+ */
+.opscore-num.score-low { color: #9ca3af; }     /* 회색 - 3.0 미만 */
 
 /* KDA */
 .td-kda-box {

@@ -2451,7 +2451,7 @@ function renderMatchList() {
             </td>
             <td>
               <div class="td-opscore-box">
-                <span class="opscore-num">${formattedScore}</span>
+                <span class="opscore-num ${getScoreColorClass(p.customScore, c_kda)}">${formattedScore}</span>
                 <span class="opscore-badge ${badgeClass}">${badgeText}</span>
               </div>
             </td>
@@ -2501,12 +2501,12 @@ function renderMatchList() {
         <table class="team-table">
           <thead>
             <tr>
-              <th>챔피언</th>
-              <th style="width: 80px;">OP Score</th>
+              <th style="width: 240px;">챔피언</th>
+              <th style="width: 65px;">OP Score</th>
               <th style="width: 120px;">KDA</th>
-              <th style="width: 140px;">피해량</th>
-              <th style="width: 80px;">와드</th>
-              <th style="width: 80px;">CS</th>
+              <th style="width: 130px;">피해량</th>
+              <th style="width: 60px;">와드</th>
+              <th style="width: 60px;">CS</th>
               <th>아이템</th>
             </tr>
           </thead>
@@ -2943,6 +2943,16 @@ function renderPagination() {
 }
 
 // 플레이어 이름 해시 기반 일관성 있는 랭크 티어 생성기
+
+// OP Score 색상 클래스 반환
+function getScoreColorClass(score, kda) {
+  if (kda === 'Perfect') return 'score-perfect';
+  if (score >= 8.0) return 'score-high';
+  if (score >= 5.0) return 'score-good';
+  if (score >= 3.0) return 'score-mid';
+  return 'score-low';
+}
+
 function getFakeTierForPlayer(player, targetPuuid) {
   if (player.puuid === targetPuuid && state.summonerProfile && state.summonerProfile.ranks) {
     const soloRank = state.summonerProfile.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');

@@ -2432,6 +2432,7 @@ function renderMatchList() {
           <tr class="${isMe ? 'is-me' : ''}">
             <td>
               <div class="td-champ-info-wrapper">
+                ${p.teamPosition ? `<div class="td-position-badge-left" title="${p.teamPosition}">${getPositionIconSvg(p.teamPosition)}</div>` : ''}
                 <div class="td-champ-avatar-box">
                   <img src="${cImg}" class="champ-avatar">
                   <span class="champ-level-badge">${p.champLevel}</span>
@@ -2498,9 +2499,9 @@ function renderMatchList() {
         <table class="team-table">
           <thead>
             <tr>
-              <th style="width: 220px;">챔피언</th>
+              <th style="width: 190px;">챔피언</th>
               <th style="width: 100px;">KDA</th>
-              <th style="width: 120px;">피해량</th>
+              <th style="width: 100px;">피해량</th>
               <th style="width: 55px;">와드</th>
               <th style="width: 55px;">CS</th>
               <th style="width: 190px;">아이템</th>
@@ -2551,10 +2552,8 @@ function renderMatchList() {
         </div>
         <div class="mc-items-wrap">
           <div class="items-container">
-            ${itemsHtmlArr[0]} ${itemsHtmlArr[1]} ${itemsHtmlArr[2]}
-            ${wardHtml}
-            ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]}
-            ${trinketHtml}
+            ${itemsHtmlArr[0]} ${itemsHtmlArr[1]} ${itemsHtmlArr[2]} ${itemsHtmlArr[3]}
+            ${itemsHtmlArr[4]} ${itemsHtmlArr[5]} ${trinketHtml}
           </div>
           <div class="quest-container" style="margin-left: 2px;">
             ${questHtml}

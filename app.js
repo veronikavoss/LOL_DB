@@ -2450,15 +2450,9 @@ function renderMatchList() {
               </div>
             </td>
             <td>
-              <div class="td-opscore-box">
-                <span class="opscore-num ${getScoreColorClass(p.customScore, c_kda)}">${formattedScore}</span>
-                <span class="opscore-badge ${badgeClass}">${badgeText}</span>
-              </div>
-            </td>
-            <td>
               <div class="td-kda-box">
                 <div class="kda-nums">${p.kills}/${p.deaths}/${p.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
-                <div class="kda-ratio-txt">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
+                <div class="kda-ratio-txt ${getScoreColorClass(p.customScore, c_kda)}">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
               </div>
             </td>
             <td>
@@ -2502,7 +2496,6 @@ function renderMatchList() {
           <thead>
             <tr>
               <th style="width: 240px;">챔피언</th>
-              <th style="width: 65px;">OP Score</th>
               <th style="width: 120px;">KDA</th>
               <th style="width: 130px;">피해량</th>
               <th style="width: 60px;">와드</th>

@@ -2482,7 +2482,6 @@ function renderMatchList() {
             <td>
               <div class="td-items-container">
                 ${itemsHtml}
-                ${detailWardHtml}
                 ${trinketHtml}
               </div>
             </td>
@@ -2500,7 +2499,7 @@ function renderMatchList() {
               <th style="width: 120px;">피해량</th>
               <th style="width: 55px;">와드</th>
               <th style="width: 55px;">CS</th>
-              <th style="width: 190px;">아이템</th>
+              <th style="width: 170px;">아이템</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>

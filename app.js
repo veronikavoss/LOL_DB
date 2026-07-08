@@ -2255,7 +2255,9 @@ function renderMatchList() {
     const redTeam = info.participants.filter(p => p.teamId === 200);
 
     let questHtml = `<div class="item-slot quest-slot empty-quest"></div>`;
-    if (me.teamPosition) {
+    if (me.roleBoundItem > 0) {
+      questHtml = `<div class="item-slot quest-slot role-bound-item" title="퀘스트 아이템"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${me.roleBoundItem}.png"></div>`;
+    } else if (me.teamPosition) {
       questHtml = `
         <div class="item-slot quest-slot position-badge" title="${me.teamPosition}">
           ${getPositionIconSvg(me.teamPosition)}
@@ -2403,7 +2405,9 @@ function renderMatchList() {
 
         // 개별 플레이어 퀘스트 보상 정보
         let pQuestHtml = `<div class="detail-item-slot quest-slot empty"></div>`;
-        if (p.teamPosition) {
+        if (p.roleBoundItem > 0) {
+          pQuestHtml = `<div class="detail-item-slot quest-slot role-bound-item" title="퀘스트 아이템"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${p.roleBoundItem}.png"></div>`;
+        } else if (p.teamPosition) {
           pQuestHtml = `
             <div class="detail-item-slot quest-slot position-badge" title="${p.teamPosition}">
               ${getPositionIconSvg(p.teamPosition)}

@@ -2527,7 +2527,7 @@ function renderMatchList() {
         </div>
         
         <div class="mc-champion">
-          ${me.teamPosition ? `<div class="mc-position-badge" title="${me.teamPosition}">${getPositionIconSvg(me.teamPosition)}</div>` : ''}
+          <div class="mc-position-badge${me.teamPosition ? '' : ' empty'}" ${me.teamPosition ? `title="${me.teamPosition}"` : ''}>${me.teamPosition ? getPositionIconSvg(me.teamPosition) : ''}</div>
           <div class="champ-img-wrap">
             <img src="${champImg}">
             <span class="champ-level">${me.champLevel}</span>

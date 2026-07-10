@@ -2456,7 +2456,7 @@ function renderMatchList() {
             <td>
               <div class="td-kda-box">
                 <div class="kda-nums">${p.kills}/${p.deaths}/${p.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
-                <div class="kda-ratio-txt ${getScoreColorClass(c_kda)}">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'} 평점</div>
+                <div class="kda-ratio-txt ${getScoreColorClass(c_kda)}">${c_kda === 'Perfect' ? 'Perfect' : c_kda + ':1'}</div>
               </div>
             </td>
             <td>
@@ -2544,7 +2544,7 @@ function renderMatchList() {
         
         <div class="mc-kda-stats">
           <div class="kda-text">${me.kills} / <span class="death">${me.deaths}</span> / ${me.assists} <span class="kda-kp-ratio">(${kp}%)</span></div>
-          <div class="kda-ratio ${getScoreColorClass(kda)}">${kda === 'Perfect' ? 'Perfect' : kda + ':1'} 평점</div>
+          <div class="kda-ratio ${getScoreColorClass(kda)}">${kda === 'Perfect' ? 'Perfect' : kda + ':1'}</div>
         </div>
         
         <div class="mc-extra-stats">
@@ -2631,7 +2631,7 @@ function renderMatchList() {
         </div>
         <div class="kda-summary">
           <div class="kda-avg">${avgK} / <span style="color:#e84057">${avgD}</span> / ${avgA}</div>
-          <div class="kda-ratio-summary"><span>${avgRatio}:1</span> 평점</div>
+          <div class="kda-ratio-summary"><span>${avgRatio}:1</span></div>
         </div>
       </div>
     </div>

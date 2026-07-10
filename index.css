@@ -1517,7 +1517,7 @@ body {
 
 /* 7. 아코디언 토글 버튼 */
 .mc-action {
-  width: 40px;
+  width: 30px;
   height: 100%;
   background: rgba(0,0,0,0.1);
   display: flex;

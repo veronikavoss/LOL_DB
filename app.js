@@ -2526,8 +2526,8 @@ function renderMatchList() {
           <div class="duration">${gameDuration}</div>
         </div>
         
-        ${me.teamPosition ? `<div class="mc-position-badge" title="${me.teamPosition}">${getPositionIconSvg(me.teamPosition)}</div>` : ''}
         <div class="mc-champion">
+          ${me.teamPosition ? `<div class="mc-position-badge" title="${me.teamPosition}">${getPositionIconSvg(me.teamPosition)}</div>` : ''}
           <div class="champ-img-wrap">
             <img src="${champImg}">
             <span class="champ-level">${me.champLevel}</span>
@@ -2552,11 +2552,11 @@ function renderMatchList() {
           <div>CS ${cs} (${csPerMin})</div>
         </div>
         <div class="mc-items-wrap">
-          <div class="items-grid-3x2">
+          <div class="items-container">
             ${itemsHtmlArr[0]} ${itemsHtmlArr[1]} ${itemsHtmlArr[2]}
             ${itemsHtmlArr[3]} ${itemsHtmlArr[4]} ${itemsHtmlArr[5]}
           </div>
-          <div class="accessories-wrap">
+          <div class="items-extra-col">
             ${trinketHtml}
             ${questHtml}
           </div>

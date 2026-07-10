@@ -1299,6 +1299,21 @@ body {
   flex-shrink: 0;
 }
 
+.mc-position-badge {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #121824;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mc-position-badge svg {
+  display: block;
+}
+
 .champ-img-wrap {
   position: relative;
   width: 48px;
@@ -1403,38 +1418,17 @@ body {
 
 .items-container {
   display: grid;
-  grid-template-columns: repeat(4, 22px);
-  gap: 2px;
-}
-
-.items-grid-3x2 {
-  display: grid;
   grid-template-columns: repeat(3, 22px);
   gap: 2px;
 }
 
-.accessories-wrap {
+.items-extra-col {
   display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.mc-position-badge {
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  background-color: #121824;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-.mc-position-badge svg {
-  display: block;
-  width: 14px;
-  height: 14px;
+  gap: 2px;
+  margin-left: 2px;
 }
 
 .item-slot {

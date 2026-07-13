@@ -1305,7 +1305,7 @@ body {
 
 /* 1. 게임 정보 바 */
 .mc-game-info {
-  width: 70px;
+  width: 60px;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -1339,14 +1339,14 @@ body {
 }
 
 .mc-position-badge {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #121824;
   border: 1px solid var(--border-color);
-  border-radius: 50%;
+  border-radius: 20%;
   flex-shrink: 0;
 }
 .mc-position-badge.empty {
@@ -1442,7 +1442,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 70px;
+  width: 80px;
   font-size: 11px;
   color: var(--text-sub);
   text-align: center;
@@ -1471,7 +1471,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  margin-left: 2px;
+  margin-left: 4px;
 }
 
 .item-slot {
@@ -1623,17 +1623,27 @@ body {
 .team-table-header.red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
 .team-table th {
-  text-align: left;
+  text-align: center; /* 헤더 텍스트 가운데 정렬 */
   padding: 6px 8px;
   color: var(--text-sub);
   font-weight: 500;
   border-bottom: 1px solid var(--border-color);
 }
 
+.team-table th:first-child {
+  text-align: left; /* 첫 번째 챔피언 헤더는 왼쪽 정렬 유지 */
+  padding-left: 12px;
+}
+
 .team-table td {
   padding: 4px 6px;
   border-bottom: 1px solid rgba(43, 57, 82, 0.5);
   vertical-align: middle;
+  text-align: center; /* 데이터 셀 내용물 가운데 정렬 */
+}
+
+.team-table td:first-child {
+  text-align: left; /* 첫 번째 챔피언 데이터 셀은 왼쪽 정렬 유지 */
 }
 
 .team-table tr.is-me td { background: rgba(255, 255, 255, 0.05); }
@@ -1775,6 +1785,8 @@ body {
 .td-kda-box {
   display: flex;
   flex-direction: column;
+  align-items: center; /* KDA 콘텐츠 가운데 정렬 */
+  justify-content: center;
 }
 
 .kda-nums {
@@ -1801,6 +1813,7 @@ body {
   gap: 3px;
   width: 100%;
   max-width: 120px;
+  margin: 0 auto; /* 셀 내부 수평 가운데 정렬 */
 }
 
 .damage-values {
@@ -1842,6 +1855,8 @@ body {
 .td-ward-box {
   display: flex;
   flex-direction: column;
+  align-items: center; /* 와드 통계 가운데 정렬 */
+  justify-content: center;
 }
 
 .ward-control-buy {
@@ -1858,6 +1873,8 @@ body {
 .td-cs-box {
   display: flex;
   flex-direction: column;
+  align-items: center; /* CS 데이터 가운데 정렬 */
+  justify-content: center;
 }
 
 .cs-total-num {
@@ -1875,6 +1892,8 @@ body {
   display: flex;
   gap: 1px;
   align-items: center;
+  justify-content: center; /* 아이템 슬롯 묶음 가운데 정렬 */
+  margin: 0 auto;
 }
 
 .detail-item-slot {

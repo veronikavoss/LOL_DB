@@ -748,6 +748,18 @@ body {
 
 .match-search-container {
   background: var(--bg-primary);
+  width: 100%;
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  align-items: center;
+}
+
+.match-search-container.centered {
+  height: calc(85vh - 100px); /* 헤더 크기 및 하단 균형을 맞춘 반응형 중앙 정렬 높이 */
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .match-search-form {
@@ -755,6 +767,12 @@ body {
   width: 100%;
   margin: 0 auto;
   padding: 16px 40px;
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.match-search-container.centered .match-search-form {
+  max-width: 600px;
+  padding: 0 20px;
 }
 
 .match-search-input-wrap {
@@ -777,7 +795,14 @@ body {
   font-size: 14px;
   font-family: var(--font-family);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, padding 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), font-size 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), border-radius 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.match-search-container.centered .match-input-container input {
+  padding: 15px 22px;
+  font-size: 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .match-input-container input:focus {
@@ -867,8 +892,14 @@ body {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
   white-space: nowrap;
+}
+
+.match-search-container.centered .match-search-btn {
+  padding: 15px 30px;
+  font-size: 16px;
+  border-radius: 12px;
 }
 
 .match-search-btn:hover {

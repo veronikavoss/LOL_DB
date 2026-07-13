@@ -233,6 +233,10 @@ function setupEventListeners() {
     elements.matchDashboard.classList.add('hidden');
     elements.matchList.innerHTML = '';
     elements.matchSummaryWidget.innerHTML = '';
+    const searchContainer = document.querySelector('.match-search-container');
+    if (searchContainer) {
+      searchContainer.classList.add('centered');
+    }
 
     // 2. URL 파라미터 제거 및 히스토리 푸시 (메인 상태로)
     if (location.search) {
@@ -306,6 +310,10 @@ function setupEventListeners() {
       elements.matchDashboard.classList.add('hidden');
       elements.matchList.innerHTML = '';
       elements.matchSummaryWidget.innerHTML = '';
+      const searchContainer = document.querySelector('.match-search-container');
+      if (searchContainer) {
+        searchContainer.classList.add('centered');
+      }
     }
   });
 }
@@ -332,6 +340,15 @@ function switchTab(tab) {
     elements.listSection.classList.add('hidden');
     elements.detailPanel.classList.add('hidden');
     elements.matchSection.classList.remove('hidden');
+
+    const searchContainer = document.querySelector('.match-search-container');
+    if (searchContainer) {
+      if (elements.summonerProfileHeader.classList.contains('hidden')) {
+        searchContainer.classList.add('centered');
+      } else {
+        searchContainer.classList.remove('centered');
+      }
+    }
   } else {
     // 챔피언/아이템 탭: 전적 영역 숨기고 도감 영역 표시
     elements.matchSection.classList.add('hidden');
@@ -1920,6 +1937,11 @@ async function handleMatchSearch() {
   state.matchSearching = true;
   elements.matchSearchBtn.disabled = true;
   elements.matchSearchBtn.textContent = '검색 중...';
+
+  const searchContainer = document.querySelector('.match-search-container');
+  if (searchContainer) {
+    searchContainer.classList.remove('centered');
+  }
 
   // 프로필 영역에 로딩 표시
   // 프로필 영역에 로딩 표시

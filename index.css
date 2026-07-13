@@ -1323,7 +1323,13 @@ body {
 .match-card.lose .mc-game-info .result { color: #e84057; }
 .mc-game-info .duration { font-size: 12px; }
 
-/* 2. 챔피언 및 스펠 */
+.mc-champion-group {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 포지션 배지와 챔피언 사이의 좁고 일정한 여백 지정 */
+  flex-shrink: 0;
+}
+
 .mc-champion {
   padding: 0;
   display: flex;
@@ -1506,7 +1512,7 @@ body {
   padding: 0;
   display: flex;
   gap: 8px;
-  width: 170px;
+  width: 180px;
   flex-shrink: 0;
   font-size: 11px;
   justify-content: flex-end;
@@ -1517,7 +1523,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 75px;
+  width: 80px;
   flex-shrink: 0;
   overflow: hidden;
 }

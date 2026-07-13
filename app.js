@@ -2522,12 +2522,12 @@ function renderMatchList() {
         <table class="team-table">
           <thead>
             <tr>
-              <th style="width: 190px;">챔피언</th>
-              <th style="width: 100px;">KDA</th>
-              <th style="width: 100px;">피해량</th>
-              <th style="width: 55px;">와드</th>
-              <th style="width: 55px;">CS</th>
-              <th style="width: 190px;">아이템</th>
+              <th style="width: 220px;">챔피언</th>
+              <th style="width: 120px;">KDA</th>
+              <th style="width: 140px;">피해량</th>
+              <th style="width: 70px;">와드</th>
+              <th style="width: 70px;">CS</th>
+              <th style="width: 260px;">아이템</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -3048,7 +3048,7 @@ function updateRealTiersForVisibleTable(container) {
     const fallback = holder.getAttribute('data-fallback');
     
     // 1. 검색 대상 본인은 이미 Profile 로드 시 ranks가 로드되어 있으므로 API 낭비 방지
-    if (puuid === state.summonerProfile?.puuid && state.summonerProfile.ranks) {
+    if (puuid === state.summonerProfile?.puuid && state.summonerProfile?.ranks) {
       const soloRank = state.summonerProfile.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
       if (soloRank) {
         holder.textContent = `${soloRank.tier} ${soloRank.rank}`;

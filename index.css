@@ -1282,12 +1282,14 @@ body {
 .match-card {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* 각 컬럼 블록 사이의 여백을 수학적으로 동일하게 자동 분할 */
   background: #282830;
   border-radius: 4px;
   overflow: hidden;
   border-left: 4px solid #6b7280;
   color: var(--text-main);
   height: 96px;
+  padding-left: 12px;
 }
 
 /* 결과별 색상 (승/패/다시하기) */
@@ -1303,8 +1305,8 @@ body {
 
 /* 1. 게임 정보 바 */
 .mc-game-info {
-  width: 80px;
-  padding: 0 8px;
+  width: 70px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1323,7 +1325,7 @@ body {
 
 /* 2. 챔피언 및 스펠 */
 .mc-champion {
-  padding: 0 8px;
+  padding: 0;
   display: flex;
   gap: 4px;
   align-items: center;
@@ -1405,12 +1407,12 @@ body {
 
 /* 3. KDA 및 통계 */
 .mc-kda-stats {
-  padding: 0 8px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 110px;
+  width: 90px;
   flex-shrink: 0;
 }
 
@@ -1429,12 +1431,12 @@ body {
 
 /* 4. 기타 정보 (킬관여, CS) */
 .mc-extra-stats {
-  padding: 0 8px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 90px;
+  width: 70px;
   font-size: 11px;
   color: var(--text-sub);
   text-align: center;
@@ -1445,7 +1447,7 @@ body {
 
 /* 5. 아이템 */
 .mc-items-wrap {
-  padding: 0 4px;
+  padding: 0;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -1501,14 +1503,14 @@ body {
 
 /* 6. 참가자 10명 리스트 */
 .mc-participants {
-  padding: 0 8px 0 20px;
+  padding: 0;
   display: flex;
   gap: 8px;
-  width: 190px;
+  width: 170px;
   flex-shrink: 0;
   font-size: 11px;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .participant-col {

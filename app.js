@@ -23,7 +23,8 @@ const state = {
   matchDetails: {},        // { matchId: matchData } 캐시
   selectedMatchId: null,   // 선택된 매치 ID
   matchSearching: false,   // 검색 진행 중 플래그
-  matchPage: 1             // 전적 검색 현재 페이지
+  matchPage: 1,            // 전적 검색 현재 페이지
+  cachedTiers: {}          // 각 PUUID별 실제 솔랭 티어 캐시
 };
 
 // 역할군 영문 -> 국문 매핑
@@ -2471,7 +2472,7 @@ function renderMatchList() {
                   <div class="summoner-name-link">
                     <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
                   </div>
-                  <div class="summoner-level-txt">${getFakeTierForPlayer(p, puuid)}</div>
+                  <div class="summoner-level-txt real-tier-holder" data-puuid="${p.puuid}" data-fallback="${getFakeTierForPlayer(p, puuid)}">${getFakeTierForPlayer(p, puuid)}</div>
                 </div>
               </div>
             </td>
@@ -2588,7 +2589,7 @@ function renderMatchList() {
           <div class="participant-col">${renderParticipants(redTeam)}</div>
         </div>
         
-        <div class="mc-action" onclick="this.classList.toggle('open'); this.parentElement.nextElementSibling.classList.toggle('open')">
+        <div class="mc-action" onclick="toggleMatchDetail(this)">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
       </div>
@@ -2999,3 +3000,80 @@ function getFakeTierForPlayer(player, targetPuuid) {
   const index = Math.abs(hash) % tiers.length;
   return tiers[index];
 }
+
+// 각 플레이어별 실제 솔로랭크 티어 비동기 조회 (캐싱 탑재)
+async function fetchRealSoloTier(puuid, nameHashTier) {
+  if (state.cachedTiers[puuid]) {
+    return state.cachedTiers[puuid];
+  }
+
+  try {
+    const res = await fetch(`/api/riot/league/${puuid}`);
+    if (!res.ok) throw new Error('League API Error');
+    const data = await res.json();
+    
+    // 1. 솔로랭크(RANKED_SOLO_5x5) 정보 탐색
+    const soloRank = data.find(r => r.queueType === 'RANKED_SOLO_5x5');
+    if (soloRank) {
+      const tierStr = `${soloRank.tier} ${soloRank.rank}`;
+      state.cachedTiers[puuid] = tierStr;
+      return tierStr;
+    }
+    
+    // 2. 자유랭크(RANKED_FLEX_SR) 정보 탐색
+    const flexRank = data.find(r => r.queueType === 'RANKED_FLEX_SR');
+    if (flexRank) {
+      const tierStr = `${flexRank.tier} ${flexRank.rank}`;
+      state.cachedTiers[puuid] = tierStr;
+      return tierStr;
+    }
+
+    // 3. 배치고사가 끝난 랭크 기록이 없는 유저
+    state.cachedTiers[puuid] = 'Unranked';
+    return 'Unranked';
+  } catch (error) {
+    console.warn(`Failed to fetch tier for ${puuid}:`, error);
+    // API Limit 등의 이유로 실패 시 가짜 해시 티어 반환 (캐싱하지 않음)
+    return nameHashTier;
+  }
+}
+
+// 펼쳐진 아코디언 상세 테이블 내의 플레이어들의 티어를 실시간 업데이트
+function updateRealTiersForVisibleTable(container) {
+  const holders = container.querySelectorAll('.real-tier-holder');
+  holders.forEach(async (holder) => {
+    const puuid = holder.getAttribute('data-puuid');
+    const fallback = holder.getAttribute('data-fallback');
+    
+    // 1. 검색 대상 본인은 이미 Profile 로드 시 ranks가 로드되어 있으므로 API 낭비 방지
+    if (puuid === state.summonerProfile?.puuid && state.summonerProfile.ranks) {
+      const soloRank = state.summonerProfile.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
+      if (soloRank) {
+        holder.textContent = `${soloRank.tier} ${soloRank.rank}`;
+        return;
+      }
+      const flexRank = state.summonerProfile.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
+      if (flexRank) {
+        holder.textContent = `${flexRank.tier} ${flexRank.rank}`;
+        return;
+      }
+      holder.textContent = 'Unranked';
+      return;
+    }
+
+    // 2. 타 유저는 API 비동기 조회하여 교체
+    const realTier = await fetchRealSoloTier(puuid, fallback);
+    holder.textContent = realTier;
+  });
+}
+
+// 아코디언 토글 핸들러 (열릴 때 티어 로더 호출)
+window.toggleMatchDetail = function(btn) {
+  btn.classList.toggle('open');
+  const accordion = btn.parentElement.nextElementSibling;
+  accordion.classList.toggle('open');
+  
+  if (accordion.classList.contains('open')) {
+    updateRealTiersForVisibleTable(accordion);
+  }
+};

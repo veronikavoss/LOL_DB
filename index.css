@@ -763,7 +763,7 @@ body {
 }
 
 .match-search-form {
-  max-width: 1140px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: 16px 40px;
@@ -925,7 +925,7 @@ body {
 }
 
 .profile-header-inner {
-  max-width: 1140px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: 0 40px;
@@ -1035,7 +1035,7 @@ body {
 .match-dashboard {
   display: flex;
   gap: 10px;
-  max-width: 1140px;
+  max-width: 1200px;
   width: 100%;
   margin: 10px auto;
   padding: 0 40px;

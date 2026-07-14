@@ -1439,7 +1439,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 90px;
+  width: 100px;
   flex-shrink: 0;
 }
 
@@ -1532,8 +1532,8 @@ body {
 .mc-participants {
   padding: 0;
   display: flex;
-  gap: 8px;
-  width: 180px;
+  gap: 4px;
+  width: 210px;
   flex-shrink: 0;
   font-size: 11px;
   justify-content: flex-end;
@@ -1544,7 +1544,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 80px;
+  width: 100px;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -1635,7 +1635,7 @@ body {
 .team-table-header {
   font-size: 14px;
   font-weight: 700;
-  padding: 8px 12px;
+  padding: 8px 8px;
   border-radius: 6px 6px 0 0;
   margin-bottom: 0;
 }

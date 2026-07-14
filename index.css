@@ -790,7 +790,7 @@ body {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 10px 36px 10px 14px; /* 우측 클리어 버튼 공간 확보 */
   color: var(--text-main);
   font-size: 14px;
   font-family: var(--font-family);
@@ -799,7 +799,7 @@ body {
 }
 
 .match-search-container.centered .match-input-container input {
-  padding: 15px 22px;
+  padding: 15px 46px 15px 22px; /* centered 상태일 때의 우측 클리어 버튼 공간 확보 */
   font-size: 16px;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
@@ -807,6 +807,32 @@ body {
 
 .match-input-container input:focus {
   border-color: var(--color-active);
+}
+
+/* 전적 검색창 지우기 X 버튼 */
+.match-clear-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-sub);
+  font-size: 18px;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  top: 0;
+  z-index: 10;
+  transition: color 0.2s, right 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), font-size 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.match-clear-btn:hover {
+  color: var(--text-main);
+}
+
+.match-search-container.centered .match-clear-btn {
+  right: 18px;
+  font-size: 22px;
 }
 
 .match-input-container input::placeholder {
@@ -1631,7 +1657,7 @@ body {
 }
 
 .team-table th:first-child {
-  text-align: left; /* 첫 번째 챔피언 헤더는 왼쪽 정렬 유지 */
+  text-align: center; /* 첫 번째 챔피언 헤더는 왼쪽 정렬 유지 */
   padding-left: 12px;
 }
 

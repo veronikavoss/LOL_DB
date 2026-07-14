@@ -102,7 +102,8 @@ const elements = {
   rankInfo: document.getElementById('rank-info'),
   matchSummaryWidget: document.getElementById('match-summary-widget'),
   matchList: document.getElementById('match-list'),
-  headerLogo: document.getElementById('header-logo')
+  headerLogo: document.getElementById('header-logo'),
+  matchClearBtn: document.getElementById('match-clear-btn')
 };
 
 // 초기화
@@ -230,6 +231,7 @@ function setupEventListeners() {
   elements.headerLogo.addEventListener('click', () => {
     // 1. 소환사 검색 인풋 및 전적 목록 초기화
     elements.matchSearchInput.value = '';
+    elements.matchClearBtn.style.display = 'none';
     elements.summonerProfileHeader.classList.add('hidden');
     elements.matchDashboard.classList.add('hidden');
     elements.matchList.innerHTML = '';
@@ -280,6 +282,20 @@ function setupEventListeners() {
     }
   });
 
+  // 전적 검색창 인풋 감지 (글자가 있으면 지우기 버튼 보이기)
+  elements.matchSearchInput.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    elements.matchClearBtn.style.display = val ? 'block' : 'none';
+  });
+
+  // 전적 검색창 텍스트 일괄 클리어 (최근 검색어 데이터는 보존)
+  elements.matchClearBtn.addEventListener('click', () => {
+    elements.matchSearchInput.value = '';
+    elements.matchClearBtn.style.display = 'none';
+    elements.matchSearchInput.focus();
+    showAutocomplete();
+  });
+
   // 자동완성 드롭다운 이벤트
   elements.matchSearchInput.addEventListener('focus', () => {
     showAutocomplete();
@@ -307,6 +323,7 @@ function setupEventListeners() {
       handleMatchSearch();
     } else {
       elements.matchSearchInput.value = '';
+      elements.matchClearBtn.style.display = 'none';
       elements.summonerProfileHeader.classList.add('hidden');
       elements.matchDashboard.classList.add('hidden');
       elements.matchList.innerHTML = '';
@@ -1924,6 +1941,9 @@ async function handleMatchSearch() {
     // 사용자가 입력창에서도 추가된 태그를 볼 수 있도록 업데이트
     elements.matchSearchInput.value = query;
   }
+
+  // 텍스트가 채워졌으므로 지우기 버튼 강제 활성화
+  elements.matchClearBtn.style.display = 'block';
 
   const parts = query.split('#');
   const gameName = parts[0].trim();

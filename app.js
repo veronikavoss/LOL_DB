@@ -24,7 +24,8 @@ const state = {
   selectedMatchId: null,   // 선택된 매치 ID
   matchSearching: false,   // 검색 진행 중 플래그
   matchPage: 1,            // 전적 검색 현재 페이지
-  cachedTiers: {}          // 각 PUUID별 실제 솔랭 티어 캐시
+  cachedTiers: {},         // 각 PUUID별 실제 솔랭 티어 캐시
+  matchCountLimit: 20      // 전적 검색 시 분석 대상 경기 수 제한
 };
 
 // 역할군 영문 -> 국문 매핑
@@ -103,7 +104,8 @@ const elements = {
   matchSummaryWidget: document.getElementById('match-summary-widget'),
   matchList: document.getElementById('match-list'),
   headerLogo: document.getElementById('header-logo'),
-  matchClearBtn: document.getElementById('match-clear-btn')
+  matchClearBtn: document.getElementById('match-clear-btn'),
+  matchSliderContainer: document.getElementById('match-slider-container')
 };
 
 // 초기화
@@ -232,6 +234,9 @@ function setupEventListeners() {
     // 1. 소환사 검색 인풋 및 전적 목록 초기화
     elements.matchSearchInput.value = '';
     elements.matchClearBtn.style.display = 'none';
+    state.matchCountLimit = 20;
+    elements.matchSliderContainer.innerHTML = '';
+    elements.matchSliderContainer.classList.add('hidden');
     elements.summonerProfileHeader.classList.add('hidden');
     elements.matchDashboard.classList.add('hidden');
     elements.matchList.innerHTML = '';
@@ -327,6 +332,9 @@ function setupEventListeners() {
     } else {
       elements.matchSearchInput.value = '';
       elements.matchClearBtn.style.display = 'none';
+      state.matchCountLimit = 20;
+      elements.matchSliderContainer.innerHTML = '';
+      elements.matchSliderContainer.classList.add('hidden');
       elements.summonerProfileHeader.classList.add('hidden');
       elements.matchDashboard.classList.add('hidden');
       elements.matchList.innerHTML = '';
@@ -1978,6 +1986,9 @@ async function handleMatchSearch() {
   `;
   elements.matchList.innerHTML = '';
   elements.matchSummaryWidget.innerHTML = '';
+  elements.matchSliderContainer.innerHTML = '';
+  elements.matchSliderContainer.classList.add('hidden');
+  state.matchCountLimit = 20;
 
   try {
     await searchSummoner(gameName, tagLine);
@@ -2185,12 +2196,87 @@ async function loadMatchHistory(puuid) {
 }
 
 // 전적 리스트 렌더링 (20게임 요약 + 대시보드 리스트)
+// 전적 리스트 렌더링 진입점 (최초 로드 시 슬라이더 초기화)
 function renderMatchList() {
+  initMatchSlider();
+  renderMatchStatisticsAndList();
+}
+
+// 슬라이더 초기화 및 동적 생성
+function initMatchSlider() {
+  const container = elements.matchSliderContainer;
+  if (!container) return;
+
+  const totalMatches = state.matchIds?.length || 0;
+  if (totalMatches === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  // 슬라이더가 이미 생성되어 동작 중인 경우, 강제로 숨김 해제만 진행
+  if (container.querySelector('#match-count-slider')) {
+    container.classList.remove('hidden');
+    return;
+  }
+
+  // 슬라이더 HTML 생성
+  container.innerHTML = `
+    <div class="slider-header-row">
+      <span class="slider-title">분석 대상 경기 수 설정</span>
+      <span class="slider-value-badge" id="slider-val-badge">최근 20경기</span>
+    </div>
+    <div class="slider-wrapper">
+      <input type="range" class="match-count-slider" id="match-count-slider" min="5" max="${totalMatches}" step="5" value="${state.matchCountLimit}">
+      <div class="slider-ticks">
+        <span>5경기</span>
+        <span>20경기</span>
+        <span>50경기</span>
+        <span>전체 (${totalMatches}경기)</span>
+      </div>
+    </div>
+  `;
+
+  container.classList.remove('hidden');
+
+  const slider = container.querySelector('#match-count-slider');
+  const badge = container.querySelector('#slider-val-badge');
+
+  // 슬라이더 UI 텍스트 조율
+  const updateSliderUI = (val) => {
+    const numVal = parseInt(val, 10);
+    if (numVal === totalMatches) {
+      badge.textContent = `전체 (${totalMatches}경기)`;
+    } else {
+      badge.textContent = `최근 ${numVal}경기`;
+    }
+  };
+
+  // 초기 텍스트 설정
+  updateSliderUI(slider.value);
+
+  slider.addEventListener('input', (e) => {
+    updateSliderUI(e.target.value);
+  });
+
+  slider.addEventListener('change', (e) => {
+    state.matchCountLimit = parseInt(e.target.value, 10);
+    renderMatchStatisticsAndList();
+  });
+}
+
+// 전적 통계 및 매치 카드 리스트를 필터 개수에 맞게 렌더링
+function renderMatchStatisticsAndList() {
   elements.matchSummaryWidget.innerHTML = '';
   elements.matchList.innerHTML = '';
   const puuid = state.summonerProfile?.puuid;
 
   if (!state.matchIds || state.matchIds.length === 0) return;
+
+  // 슬라이더 설정된 분석 개수만큼 매치ID 슬라이스
+  let activeMatchIds = state.matchIds;
+  if (state.matchCountLimit && state.matchCountLimit < activeMatchIds.length) {
+    activeMatchIds = activeMatchIds.slice(0, state.matchCountLimit);
+  }
 
   // 통계 계산용 변수
   let wins = 0;
@@ -2201,7 +2287,7 @@ function renderMatchList() {
 
   const matchElements = [];
 
-  state.matchIds.forEach(matchId => {
+  activeMatchIds.forEach(matchId => {
     const match = state.matchDetails[matchId];
     if (!match) return;
 

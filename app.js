@@ -1740,6 +1740,121 @@ function translateUnit(unitStr) {
   return result;
 }
 
+// 매치 히스토리 로드 (시즌 전체 전적 가져오기)
+async function loadMatchHistory(puuid) {
+  // 로딩 표시
+  elements.matchList.innerHTML = `
+    <div class="match-loading">
+      <div class="spinner"></div>
+      <p>시즌 전체 전적을 불러오는 중...</p>
+    </div>
+  `;
+
+  // 2026 시즌 시작 타임스탬프 (2026년 1월 8일 UTC, 초 단위)
+  const SEASON_START_EPOCH = Math.floor(new Date('2026-01-08T00:00:00Z').getTime() / 1000);
+
+  // 1단계: 매치 ID 전체 수집 (100개씩 반복 요청)
+  let allMatchIds = [];
+  let start = 0;
+  const fetchBatch = 100; // Riot API 최대 허용 단위
+  let keepFetching = true;
+
+  while (keepFetching) {
+    const loadingEl = elements.matchList.querySelector('.match-loading p');
+    if (loadingEl) {
+      loadingEl.textContent = `매치 목록 수집 중... (${allMatchIds.length}개 발견)`;
+    }
+
+    const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?start=${start}&count=${fetchBatch}&startTime=${SEASON_START_EPOCH}`);
+    if (!matchIdsRes.ok) throw new Error('매치 목록을 가져올 수 없습니다.');
+    const batchIds = await matchIdsRes.json();
+
+    if (!batchIds || batchIds.length === 0) {
+      keepFetching = false;
+    } else {
+      allMatchIds = allMatchIds.concat(batchIds);
+      start += batchIds.length;
+      if (batchIds.length < fetchBatch) {
+        keepFetching = false;
+      }
+    }
+  }
+
+  state.matchIds = allMatchIds;
+
+  if (allMatchIds.length === 0) {
+    elements.matchList.innerHTML = `
+      <div class="match-empty">
+        <div class="empty-icon">📋</div>
+        <h3>전적 없음</h3>
+        <p>이번 시즌 전적이 없습니다.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 2단계: 초기 슬라이더 값(기본 20개)만큼만 상세 로드
+  state.matchDetails = {};
+  const initialCount = Math.min(state.matchCountLimit, allMatchIds.length);
+  const initialIds = allMatchIds.slice(0, initialCount);
+  await loadMatchDetails(initialIds);
+
+  // 전적 리스트 렌더링
+  renderMatchList();
+  saveDiscoveredSummoners();
+}
+
+// 매치 상세 데이터 로드 (아직 캐시에 없는 것만 가져옴)
+async function loadMatchDetails(matchIds, showLoading = true) {
+  // 아직 로드되지 않은 ID만 필터
+  const needed = matchIds.filter(id => !state.matchDetails[id]);
+  if (needed.length === 0) return;
+
+  if (showLoading) {
+    elements.matchList.innerHTML = `
+      <div class="match-loading">
+        <div class="spinner"></div>
+        <p>전적 상세 정보 로딩 중 (0/${needed.length})...</p>
+      </div>
+    `;
+  }
+
+  const batchSize = 5;
+  for (let i = 0; i < needed.length; i += batchSize) {
+    const batch = needed.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(async (matchId) => {
+        const res = await fetch(`/api/riot/match/${matchId}`);
+        if (!res.ok) throw new Error(`매치 ${matchId} 로드 실패`);
+        return res.json();
+      })
+    );
+
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        state.matchDetails[batch[idx]] = result.value;
+      }
+    });
+
+    if (showLoading) {
+      const loadingEl = elements.matchList.querySelector('.match-loading p');
+      if (loadingEl) {
+        loadingEl.textContent = `전적 상세 정보 로딩 중 (${Math.min(i + batchSize, needed.length)}/${needed.length})...`;
+      }
+    }
+  }
+}
+
+// 매치 목록 지연 로딩 헬퍼
+async function lazyLoadMatches() {
+  const currentDisplayed = Object.keys(state.matchDetails).length;
+  if (currentDisplayed >= state.matchIds.length) return;
+
+  const nextIds = state.matchIds.slice(currentDisplayed, currentDisplayed + state.matchCountLimit);
+  await loadMatchDetails(nextIds, false);
+  renderMatchList();
+}
+
 // 로컬에 보관된 Meraki 스펙 데이터를 최초 1회 일괄 로드 (CORS 및 속도제한 완벽 해결)
 async function loadMerakiData() {
   try {
@@ -2126,98 +2241,6 @@ function renderMatchProfile() {
   `;
 }
 
-// 매치 히스토리 로드 (시즌 전체 전적 가져오기)
-async function loadMatchHistory(puuid) {
-  // 로딩 표시
-  elements.matchList.innerHTML = `
-    <div class="match-loading">
-      <div class="spinner"></div>
-      <p>시즌 전체 전적을 불러오는 중...</p>
-    </div>
-  `;
-
-  // 2026 시즌 시작 타임스탬프 (2026년 1월 8일 UTC, 초 단위)
-  const SEASON_START_EPOCH = Math.floor(new Date('2026-01-08T00:00:00Z').getTime() / 1000);
-
-  // 1단계: 매치 ID 전체 수집 (100개씩 반복 요청)
-  let allMatchIds = [];
-  let start = 0;
-  const fetchBatch = 100; // Riot API 최대 허용 단위
-  let keepFetching = true;
-
-  while (keepFetching) {
-    const loadingEl = elements.matchList.querySelector('.match-loading p');
-    if (loadingEl) {
-      loadingEl.textContent = `매치 목록 수집 중... (${allMatchIds.length}개 발견)`;
-    }
-
-    const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?start=${start}&count=${fetchBatch}&startTime=${SEASON_START_EPOCH}`);
-    if (!matchIdsRes.ok) throw new Error('매치 목록을 가져올 수 없습니다.');
-    const batchIds = await matchIdsRes.json();
-
-    if (!batchIds || batchIds.length === 0) {
-      keepFetching = false;
-    } else {
-      allMatchIds = allMatchIds.concat(batchIds);
-      start += batchIds.length;
-      // Riot API가 요청한 수보다 적게 반환하면 끝
-      if (batchIds.length < fetchBatch) {
-        keepFetching = false;
-      }
-    }
-  }
-
-  state.matchIds = allMatchIds;
-
-  if (allMatchIds.length === 0) {
-    elements.matchList.innerHTML = `
-      <div class="match-empty">
-        <div class="empty-icon">📋</div>
-        <h3>전적 없음</h3>
-        <p>이번 시즌 전적이 없습니다.</p>
-      </div>
-    `;
-    return;
-  }
-
-  // 2단계: 매치 상세 데이터 병렬 로드 (5개씩 배치)
-  state.matchDetails = {};
-  elements.matchList.innerHTML = `
-    <div class="match-loading">
-      <div class="spinner"></div>
-      <p>전적 상세 정보 로딩 중 (0/${allMatchIds.length})...</p>
-    </div>
-  `;
-
-  const batchSize = 5;
-  for (let i = 0; i < allMatchIds.length; i += batchSize) {
-    const batch = allMatchIds.slice(i, i + batchSize);
-    const results = await Promise.allSettled(
-      batch.map(async (matchId) => {
-        if (state.matchDetails[matchId]) return state.matchDetails[matchId];
-        const res = await fetch(`/api/riot/match/${matchId}`);
-        if (!res.ok) throw new Error(`매치 ${matchId} 로드 실패`);
-        return res.json();
-      })
-    );
-
-    results.forEach((result, idx) => {
-      if (result.status === 'fulfilled') {
-        state.matchDetails[batch[idx]] = result.value;
-      }
-    });
-
-    // 진행 상황 업데이트
-    const loadingEl = elements.matchList.querySelector('.match-loading p');
-    if (loadingEl) {
-      loadingEl.textContent = `전적 상세 정보 로딩 중 (${Math.min(i + batchSize, allMatchIds.length)}/${allMatchIds.length})...`;
-    }
-  }
-
-  // 전적 리스트 렌더링
-  renderMatchList();
-  saveDiscoveredSummoners();
-}
 
 // 전적 리스트 렌더링 (20게임 요약 + 대시보드 리스트)
 // 전적 리스트 렌더링 진입점 (최초 로드 시 슬라이더 초기화)
@@ -2284,10 +2307,18 @@ function initMatchSlider() {
     badge.textContent = getBadgeText(e.target.value);
   });
 
-  slider.addEventListener('change', (e) => {
+  slider.addEventListener('change', async (e) => {
     const val = parseInt(e.target.value, 10);
     // 110(마지막 스텝) = 전체 데이터
     state.matchCountLimit = val > 100 ? totalMatches : val;
+
+    // 필요한 매치 상세 정보 점진 로드 (캐시에 없는 것만)
+    const neededIds = state.matchIds.slice(0, state.matchCountLimit);
+    const missingIds = neededIds.filter(id => !state.matchDetails[id]);
+    if (missingIds.length > 0) {
+      await loadMatchDetails(missingIds, true);
+    }
+
     renderMatchStatisticsAndList();
   });
 }

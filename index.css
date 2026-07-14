@@ -1640,8 +1640,8 @@ body {
   margin-bottom: 0;
 }
 
-.team-table-header.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-.team-table-header.red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.team-table-header.blue { background: rgb(83 134 228 / 73%); color: #d0e1f7fc; }
+.team-table-header.red { background: rgb(230 63 88 / 63%); color: #e9afaf; }
 
 .team-table th {
   text-align: center; /* 헤더 텍스트 가운데 정렬 */
@@ -1658,7 +1658,7 @@ body {
 
 .team-table td {
   padding: 4px 6px;
-  border-bottom: 1px solid rgba(43, 57, 82, 0.5);
+  border-bottom: 1px solid rgba(43, 57, 82, 0.333);
   vertical-align: middle;
   text-align: center; /* 데이터 셀 내용물 가운데 정렬 */
 }
@@ -1667,7 +1667,7 @@ body {
   text-align: left; /* 첫 번째 챔피언 데이터 셀은 왼쪽 정렬 유지 */
 }
 
-.team-table tr.is-me td { background: rgba(255, 255, 255, 0.05); }
+.team-table tr.is-me td { background: rgba(255, 255, 255, 0.2); }
 
 /* 상세 정보 테이블 스타일 리팩토링 (OP.GG 스타일) */
 .td-champ-info-wrapper {
@@ -1795,7 +1795,7 @@ body {
 .opscore-badge.badge-ace { background: #3b82f6; }
 .opscore-badge.badge-normal { background: #4b5563; }
 
-/* OP Score & KDA 색상 등급 */
+/* KDA 색상 등급 */
 .score-perfect { color: #7dd3fc !important; font-weight: bold; } /* 하늘색 - Perfect/10.0 */
 .score-high { color: #f87171 !important; font-weight: bold; }    /* 붉은색 - 5.0+ */
 .score-good { color: #fb923c !important; font-weight: bold; }    /* 주황색 - 4.0+ */

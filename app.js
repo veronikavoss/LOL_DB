@@ -2545,9 +2545,9 @@ function renderMatchList() {
         <table class="team-table">
           <thead>
             <tr>
-              <th style="width: 25%;">챔피언</th>
+              <th style="width: 28%;">챔피언</th>
               <th style="width: 13%;">KDA</th>
-              <th style="width: 16%;">피해량</th>
+              <th style="width: 13%;">피해량</th>
               <th style="width: 8%;">와드</th>
               <th style="width: 8%;">CS</th>
               <th style="width: 30%;">아이템</th>

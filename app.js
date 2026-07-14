@@ -2571,22 +2571,19 @@ function renderMatchList() {
           <div class="result">${resultText}</div>
           <div class="duration">${gameDuration}</div>
         </div>
-        
-        <div class="mc-champion-group">
-          <div class="mc-position-badge${me.teamPosition ? '' : ' empty'}" ${me.teamPosition ? `title="${me.teamPosition}"` : ''}>${me.teamPosition ? getPositionIconSvg(me.teamPosition) : ''}</div>
-          <div class="mc-champion">
-            <div class="champ-img-wrap">
-              <img src="${champImg}">
-              <span class="champ-level">${me.champLevel}</span>
-            </div>
-            <div class="spell-col">
-              <div class="spell-icon">${spell1Img ? `<img src="${spell1Img}">` : ''}</div>
-              <div class="spell-icon">${spell2Img ? `<img src="${spell2Img}">` : ''}</div>
-            </div>
-            <div class="rune-col">
-              <div class="rune-icon">${rune1Img ? `<img src="${rune1Img}">` : ''}</div>
-              <div class="rune-icon">${rune2Img ? `<img src="${rune2Img}">` : ''}</div>
-            </div>
+        <div class="mc-position-badge${me.teamPosition ? '' : ' empty'}" ${me.teamPosition ? `title="${me.teamPosition}"` : ''}>${me.teamPosition ? getPositionIconSvg(me.teamPosition) : ''}</div>
+        <div class="mc-champion">
+          <div class="champ-img-wrap">
+            <img src="${champImg}">
+            <span class="champ-level">${me.champLevel}</span>
+          </div>
+          <div class="spell-col">
+            <div class="spell-icon">${spell1Img ? `<img src="${spell1Img}">` : ''}</div>
+            <div class="spell-icon">${spell2Img ? `<img src="${spell2Img}">` : ''}</div>
+          </div>
+          <div class="rune-col">
+            <div class="rune-icon">${rune1Img ? `<img src="${rune1Img}">` : ''}</div>
+            <div class="rune-icon">${rune2Img ? `<img src="${rune2Img}">` : ''}</div>
           </div>
         </div>
         

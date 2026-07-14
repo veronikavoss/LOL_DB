@@ -1314,7 +1314,7 @@ body {
   overflow: hidden;
   border-left: 4px solid #6b7280;
   color: var(--text-main);
-  height: 96px;
+  height: 100px;
   padding-left: 12px;
 }
 
@@ -1349,12 +1349,7 @@ body {
 .match-card.lose .mc-game-info .result { color: #e84057; }
 .mc-game-info .duration { font-size: 12px; }
 
-.mc-champion-group {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* 포지션 배지와 챔피언 사이의 좁고 일정한 여백 지정 */
-  flex-shrink: 0;
-}
+
 
 .mc-champion {
   padding: 0;

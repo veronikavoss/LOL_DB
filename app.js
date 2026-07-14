@@ -2545,12 +2545,12 @@ function renderMatchList() {
         <table class="team-table">
           <thead>
             <tr>
-              <th style="width: 170px;">챔피언</th>
-              <th style="width: 90px;">KDA</th>
-              <th style="width: 110px;">피해량</th>
-              <th style="width: 55px;">와드</th>
-              <th style="width: 55px;">CS</th>
-              <th style="width: 220px;">아이템</th>
+              <th style="width: 25%;">챔피언</th>
+              <th style="width: 13%;">KDA</th>
+              <th style="width: 16%;">피해량</th>
+              <th style="width: 8%;">와드</th>
+              <th style="width: 8%;">CS</th>
+              <th style="width: 30%;">아이템</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>

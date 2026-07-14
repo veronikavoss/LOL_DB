@@ -13,23 +13,38 @@ app.use(express.static(path.join(__dirname)));
 // Riot API 프록시 엔드포인트
 // ========================
 
-// 공통 Riot API 요청 함수
-async function riotApiRequest(url) {
-  const response = await fetch(url, {
-    headers: {
-      'X-Riot-Token': RIOT_API_KEY
-    }
-  });
+// 공통 Riot API 요청 함수 (429 Rate Limit 자동 재시도 포함)
+async function riotApiRequest(url, retries = 3) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, {
+      headers: {
+        'X-Riot-Token': RIOT_API_KEY
+      }
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    const error = new Error(`Riot API 오류: ${response.status}`);
-    error.status = response.status;
-    error.body = errorBody;
-    throw error;
+    if (response.status === 429) {
+      // Rate Limit 도달 — Retry-After 헤더 기반 대기 후 재시도
+      const retryAfter = parseInt(response.headers.get('Retry-After') || '2', 10);
+      console.log(`Rate limit 도달, ${retryAfter}초 후 재시도... (${attempt + 1}/${retries})`);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      const error = new Error(`Riot API 오류: ${response.status}`);
+      error.status = response.status;
+      error.body = errorBody;
+      throw error;
+    }
+
+    return response.json();
   }
 
-  return response.json();
+  // 모든 재시도 소진
+  const error = new Error('Riot API Rate Limit 초과 — 재시도 횟수 소진');
+  error.status = 429;
+  throw error;
 }
 
 // 1. 소환사명#태그 → PUUID 조회 (Account-V1)
@@ -79,7 +94,11 @@ app.get('/api/riot/matches/:puuid', async (req, res) => {
     const { puuid } = req.params;
     const start = req.query.start || 0;
     const count = req.query.count || 20;
-    const url = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
+    const startTime = req.query.startTime || '';
+    let url = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
+    if (startTime) {
+      url += `&startTime=${startTime}`;
+    }
     const data = await riotApiRequest(url);
     res.json(data);
   } catch (error) {

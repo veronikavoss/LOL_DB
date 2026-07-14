@@ -2126,48 +2126,72 @@ function renderMatchProfile() {
   `;
 }
 
-// 매치 히스토리 로드
+// 매치 히스토리 로드 (시즌 전체 전적 가져오기)
 async function loadMatchHistory(puuid) {
   // 로딩 표시
   elements.matchList.innerHTML = `
     <div class="match-loading">
       <div class="spinner"></div>
-      <p>전적을 불러오는 중...</p>
+      <p>시즌 전체 전적을 불러오는 중...</p>
     </div>
   `;
 
-  // 페이지에 기반한 start 계산
-  const start = (state.matchPage - 1) * 20;
+  // 2026 시즌 시작 타임스탬프 (2026년 1월 8일 UTC, 초 단위)
+  const SEASON_START_EPOCH = Math.floor(new Date('2026-01-08T00:00:00Z').getTime() / 1000);
 
-  // 매치 ID 목록 가져오기 (start 쿼리 파라미터 적용)
-  const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?start=${start}&count=20`);
-  if (!matchIdsRes.ok) throw new Error('매치 목록을 가져올 수 없습니다.');
-  const matchIds = await matchIdsRes.json();
-  state.matchIds = matchIds;
+  // 1단계: 매치 ID 전체 수집 (100개씩 반복 요청)
+  let allMatchIds = [];
+  let start = 0;
+  const fetchBatch = 100; // Riot API 최대 허용 단위
+  let keepFetching = true;
 
-  if (matchIds.length === 0) {
+  while (keepFetching) {
+    const loadingEl = elements.matchList.querySelector('.match-loading p');
+    if (loadingEl) {
+      loadingEl.textContent = `매치 목록 수집 중... (${allMatchIds.length}개 발견)`;
+    }
+
+    const matchIdsRes = await fetch(`/api/riot/matches/${puuid}?start=${start}&count=${fetchBatch}&startTime=${SEASON_START_EPOCH}`);
+    if (!matchIdsRes.ok) throw new Error('매치 목록을 가져올 수 없습니다.');
+    const batchIds = await matchIdsRes.json();
+
+    if (!batchIds || batchIds.length === 0) {
+      keepFetching = false;
+    } else {
+      allMatchIds = allMatchIds.concat(batchIds);
+      start += batchIds.length;
+      // Riot API가 요청한 수보다 적게 반환하면 끝
+      if (batchIds.length < fetchBatch) {
+        keepFetching = false;
+      }
+    }
+  }
+
+  state.matchIds = allMatchIds;
+
+  if (allMatchIds.length === 0) {
     elements.matchList.innerHTML = `
       <div class="match-empty">
         <div class="empty-icon">📋</div>
         <h3>전적 없음</h3>
-        <p>최근 전적이 없습니다.</p>
+        <p>이번 시즌 전적이 없습니다.</p>
       </div>
     `;
     return;
   }
 
-  // 매치 상세 데이터 병렬 로드 (5개씩 배치)
+  // 2단계: 매치 상세 데이터 병렬 로드 (5개씩 배치)
   state.matchDetails = {};
   elements.matchList.innerHTML = `
     <div class="match-loading">
       <div class="spinner"></div>
-      <p>전적 상세 정보 로딩 중 (0/${matchIds.length})...</p>
+      <p>전적 상세 정보 로딩 중 (0/${allMatchIds.length})...</p>
     </div>
   `;
 
   const batchSize = 5;
-  for (let i = 0; i < matchIds.length; i += batchSize) {
-    const batch = matchIds.slice(i, i + batchSize);
+  for (let i = 0; i < allMatchIds.length; i += batchSize) {
+    const batch = allMatchIds.slice(i, i + batchSize);
     const results = await Promise.allSettled(
       batch.map(async (matchId) => {
         if (state.matchDetails[matchId]) return state.matchDetails[matchId];
@@ -2186,7 +2210,7 @@ async function loadMatchHistory(puuid) {
     // 진행 상황 업데이트
     const loadingEl = elements.matchList.querySelector('.match-loading p');
     if (loadingEl) {
-      loadingEl.textContent = `전적 상세 정보 로딩 중 (${Math.min(i + batchSize, matchIds.length)}/${matchIds.length})...`;
+      loadingEl.textContent = `전적 상세 정보 로딩 중 (${Math.min(i + batchSize, allMatchIds.length)}/${allMatchIds.length})...`;
     }
   }
 
@@ -2213,25 +2237,40 @@ function initMatchSlider() {
     return;
   }
 
-  // 슬라이더가 이미 생성되어 동작 중인 경우, 강제로 숨김 해제만 진행
+  // 슬라이더가 이미 생성되어 동작 중인 경우, 숨김 해제만 진행
   if (container.querySelector('#match-count-slider')) {
     container.classList.remove('hidden');
     return;
   }
 
+  // 슬라이더 스텝 구성: 10, 20, ..., 100, 전체
+  // max = 110 (마지막 스텝이 '전체'를 의미)
+  const sliderMax = 110;
+  const initialValue = Math.min(state.matchCountLimit, 100);
+
+  // 배지 텍스트 결정 함수
+  const getBadgeText = (val) => {
+    const numVal = parseInt(val, 10);
+    if (numVal > 100) {
+      return `전체 (${totalMatches}경기)`;
+    }
+    return `최근 ${numVal}경기`;
+  };
+
   // 슬라이더 HTML 생성
   container.innerHTML = `
     <div class="slider-header-row">
       <span class="slider-title">분석 대상 경기 수 설정</span>
-      <span class="slider-value-badge" id="slider-val-badge">최근 20경기</span>
+      <span class="slider-value-badge" id="slider-val-badge">${getBadgeText(initialValue)}</span>
     </div>
     <div class="slider-wrapper">
-      <input type="range" class="match-count-slider" id="match-count-slider" min="5" max="${totalMatches}" step="5" value="${state.matchCountLimit}">
+      <input type="range" class="match-count-slider" id="match-count-slider" min="10" max="${sliderMax}" step="10" value="${initialValue}">
       <div class="slider-ticks">
-        <span>5경기</span>
-        <span>20경기</span>
-        <span>50경기</span>
-        <span>전체 (${totalMatches}경기)</span>
+        <span>10</span>
+        <span>20</span>
+        <span>50</span>
+        <span>100</span>
+        <span>전체</span>
       </div>
     </div>
   `;
@@ -2241,25 +2280,14 @@ function initMatchSlider() {
   const slider = container.querySelector('#match-count-slider');
   const badge = container.querySelector('#slider-val-badge');
 
-  // 슬라이더 UI 텍스트 조율
-  const updateSliderUI = (val) => {
-    const numVal = parseInt(val, 10);
-    if (numVal === totalMatches) {
-      badge.textContent = `전체 (${totalMatches}경기)`;
-    } else {
-      badge.textContent = `최근 ${numVal}경기`;
-    }
-  };
-
-  // 초기 텍스트 설정
-  updateSliderUI(slider.value);
-
   slider.addEventListener('input', (e) => {
-    updateSliderUI(e.target.value);
+    badge.textContent = getBadgeText(e.target.value);
   });
 
   slider.addEventListener('change', (e) => {
-    state.matchCountLimit = parseInt(e.target.value, 10);
+    const val = parseInt(e.target.value, 10);
+    // 110(마지막 스텝) = 전체 데이터
+    state.matchCountLimit = val > 100 ? totalMatches : val;
     renderMatchStatisticsAndList();
   });
 }
@@ -2755,7 +2783,7 @@ function renderMatchStatisticsAndList() {
 
   elements.matchSummaryWidget.innerHTML = `
     <div class="summary-part">
-      <div class="summary-title">20전 ${wins}승 ${losses}패</div>
+      <div class="summary-title">${totalGames}전 ${wins}승 ${losses}패</div>
       <div class="summary-stats-wrap">
         <div class="pie-chart" style="--win-deg: ${winRate}%">
           <div class="pie-chart-inner">${winRate}%</div>
@@ -2767,7 +2795,7 @@ function renderMatchStatisticsAndList() {
       </div>
     </div>
     <div class="summary-part">
-      <div class="summary-title">플레이한 챔피언 (최근 20게임)</div>
+      <div class="summary-title">플레이한 챔피언 (${totalGames}게임)</div>
       <div class="most-champ-list">
         ${mostChampHtml || '<div style="color:var(--text-sub);font-size:12px;">데이터 없음</div>'}
       </div>
@@ -2786,9 +2814,6 @@ function renderMatchStatisticsAndList() {
 
   // 매치 리스트 DOM 추가
   matchElements.forEach(el => elements.matchList.appendChild(el));
-
-  // 페이지네이션 바 추가
-  renderPagination();
 }
 
 // 자동완성: 최근 검색어 저장

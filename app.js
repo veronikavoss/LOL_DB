@@ -289,7 +289,8 @@ function setupEventListeners() {
   });
 
   // 전적 검색창 텍스트 일괄 클리어 (최근 검색어 데이터는 보존)
-  elements.matchClearBtn.addEventListener('click', () => {
+  elements.matchClearBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // 외부 클릭 닫기 이벤트 차단
     elements.matchSearchInput.value = '';
     elements.matchClearBtn.style.display = 'none';
     elements.matchSearchInput.focus();
@@ -306,7 +307,9 @@ function setupEventListeners() {
 
   // 외부 클릭 시 자동완성 닫기
   document.addEventListener('click', (e) => {
-    if (!elements.matchSearchInput.contains(e.target) && !elements.matchAutocompleteList.contains(e.target)) {
+    if (!elements.matchSearchInput.contains(e.target) && 
+        !elements.matchAutocompleteList.contains(e.target) && 
+        !elements.matchClearBtn.contains(e.target)) {
       hideAutocomplete();
     }
   });

@@ -2266,28 +2266,34 @@ function initMatchSlider() {
     return;
   }
 
-  // 슬라이더 스텝 구성: 10, 20, ..., 100, 전체
-  // max = 110 (마지막 스텝이 '전체'를 의미)
-  const sliderMax = 110;
-  const initialValue = Math.min(state.matchCountLimit, 100);
+  // 인덱스별 매핑 단계 정의 (0: 10, 1: 20, 2: 50, 3: 100, 4: 전체)
+  const steps = [10, 20, 50, 100, totalMatches];
+  
+  // 현재 state.matchCountLimit에 매칭되는 슬라이더 인덱스 찾기
+  let initialValueIndex = steps.indexOf(state.matchCountLimit);
+  if (initialValueIndex === -1) {
+    // 매치되지 않는 값일 경우 가장 가까운 값 매핑
+    initialValueIndex = steps.findIndex(s => s >= state.matchCountLimit);
+    if (initialValueIndex === -1) initialValueIndex = 4;
+  }
 
   // 배지 텍스트 결정 함수
-  const getBadgeText = (val) => {
-    const numVal = parseInt(val, 10);
-    if (numVal > 100) {
+  const getBadgeText = (index) => {
+    const idx = parseInt(index, 10);
+    if (idx === 4) {
       return `전체 (${totalMatches}경기)`;
     }
-    return `최근 ${numVal}경기`;
+    return `최근 ${steps[idx]}경기`;
   };
 
-  // 슬라이더 HTML 생성
+  // 슬라이더 HTML 생성 (min=0, max=4, step=1 로 균등 5분할 매핑)
   container.innerHTML = `
     <div class="slider-header-row">
       <span class="slider-title">분석 대상 경기 수 설정</span>
-      <span class="slider-value-badge" id="slider-val-badge">${getBadgeText(initialValue)}</span>
+      <span class="slider-value-badge" id="slider-val-badge">${getBadgeText(initialValueIndex)}</span>
     </div>
     <div class="slider-wrapper">
-      <input type="range" class="match-count-slider" id="match-count-slider" min="10" max="${sliderMax}" step="10" value="${initialValue}">
+      <input type="range" class="match-count-slider" id="match-count-slider" min="0" max="4" step="1" value="${initialValueIndex}">
       <div class="slider-ticks">
         <span>10</span>
         <span>20</span>
@@ -2308,9 +2314,9 @@ function initMatchSlider() {
   });
 
   slider.addEventListener('change', async (e) => {
-    const val = parseInt(e.target.value, 10);
-    // 110(마지막 스텝) = 전체 데이터
-    state.matchCountLimit = val > 100 ? totalMatches : val;
+    const idx = parseInt(e.target.value, 10);
+    state.matchCountLimit = steps[idx];
+    state.matchPage = 1;
 
     // 필요한 매치 상세 정보 점진 로드 (캐시에 없는 것만)
     const neededIds = state.matchIds.slice(0, state.matchCountLimit);
@@ -2331,20 +2337,24 @@ function renderMatchStatisticsAndList() {
 
   if (!state.matchIds || state.matchIds.length === 0) return;
 
-  // 슬라이더 설정된 분석 개수만큼 매치ID 슬라이스
+  // 1. 대시보드 통계용 매치 ID (슬라이더 개수 범위 연동)
   let activeMatchIds = state.matchIds;
   if (state.matchCountLimit && state.matchCountLimit < activeMatchIds.length) {
     activeMatchIds = activeMatchIds.slice(0, state.matchCountLimit);
   }
 
-  // 통계 계산용 변수
+  // 2. 하단 매치 카드 리스트용 매치 ID (슬라이더와 무관하게 항상 20개 고정)
+  const pageSize = 20;
+  const listStartIndex = (state.matchPage - 1) * pageSize;
+  const listMatchIds = state.matchIds.slice(listStartIndex, listStartIndex + pageSize);
+
+  // --- [1단계] 통계 계산 (activeMatchIds 사용) ---
   let wins = 0;
   let losses = 0;
   let tKills = 0, tDeaths = 0, tAssists = 0;
   const champStats = {};
   const roleCount = { TOP: 0, JUNGLE: 0, MIDDLE: 0, BOTTOM: 0, UTILITY: 0 };
-
-  const matchElements = [];
+  let isRemakeForStat = false;
 
   activeMatchIds.forEach(matchId => {
     const match = state.matchDetails[matchId];
@@ -2357,14 +2367,12 @@ function renderMatchStatisticsAndList() {
     const isWin = me.win;
     const isRemake = info.gameDuration < 300;
     
-    // 통계 누적 (다시하기 제외)
     if (!isRemake) {
       if (isWin) wins++; else losses++;
       tKills += me.kills;
       tDeaths += me.deaths;
       tAssists += me.assists;
 
-      // 챔피언 통계
       if (!champStats[me.championName]) champStats[me.championName] = { count: 0, w: 0, k: 0, d: 0, a: 0 };
       champStats[me.championName].count++;
       if (isWin) champStats[me.championName].w++;
@@ -2372,32 +2380,42 @@ function renderMatchStatisticsAndList() {
       champStats[me.championName].d += me.deaths;
       champStats[me.championName].a += me.assists;
 
-      // 포지션 통계
       if (me.teamPosition && roleCount[me.teamPosition] !== undefined) {
         roleCount[me.teamPosition]++;
       }
     }
+  });
 
-    // --- 개별 매치 카드 생성 ---
+  // --- [2단계] 매치 카드 생성 (listMatchIds 사용) ---
+  const matchElements = [];
+
+  listMatchIds.forEach(matchId => {
+    const match = state.matchDetails[matchId];
+    if (!match) return;
+
+    const info = match.info;
+    const me = info.participants.find(p => p.puuid === puuid);
+    if (!me) return;
+
+    const isWin = me.win;
+    const isRemake = info.gameDuration < 300;
+
     const resultClass = isRemake ? 'remake' : (isWin ? 'win' : 'lose');
     const resultText = isRemake ? '다시하기' : (isWin ? '승리' : '패배');
 
     const champImg = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${me.championName}.png`;
     
-    // 스펠 이미지 찾기
     const spell1Obj = Object.values(state.spells).find(s => s.key == me.summoner1Id);
     const spell2Obj = Object.values(state.spells).find(s => s.key == me.summoner2Id);
     const spell1Img = spell1Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell1Obj.id}.png` : '';
     const spell2Img = spell2Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell2Obj.id}.png` : '';
 
-    // 룬 이미지 찾기
     let rune1Img = '';
     let rune2Img = '';
     if (me.perks && me.perks.styles) {
       const primaryStyle = me.perks.styles[0];
       const subStyle = me.perks.styles[1];
       
-      // 핵심 룬 (primaryStyle.selections[0].perk)
       if (primaryStyle && primaryStyle.selections && primaryStyle.selections[0]) {
         const primaryPerkId = primaryStyle.selections[0].perk;
         const primaryTree = state.runes.find(r => r.id === primaryStyle.style);
@@ -2407,7 +2425,6 @@ function renderMatchStatisticsAndList() {
         }
       }
       
-      // 보조 룬 트리 아이콘 (subStyle.style)
       if (subStyle) {
         const subTree = state.runes.find(r => r.id === subStyle.style);
         if (subTree) rune2Img = `https://ddragon.leagueoflegends.com/cdn/img/${subTree.icon}`;
@@ -2423,13 +2440,11 @@ function renderMatchStatisticsAndList() {
     const gameDuration = formatGameDuration(info.gameDuration);
     const queueName = getQueueName(info.queueId);
 
-    // 날짜 처리
     const gameEndTime = info.gameEndTimestamp || (info.gameStartTimestamp + info.gameDuration * 1000);
     const agoMs = Date.now() - gameEndTime;
     const agoDay = Math.floor(agoMs / 86400000);
     const agoText = agoDay > 0 ? `${agoDay}일 전` : (Math.floor(agoMs / 3600000) > 0 ? `${Math.floor(agoMs / 3600000)}시간 전` : `${Math.floor(agoMs / 60000)}분 전`);
 
-    // 아이템 7슬롯 (OP.GG 스타일: 윗줄 3개+장신구, 아랫줄 3개)
     const mainItems = [me.item0, me.item1, me.item2, me.item3, me.item4, me.item5];
     const trinketId = me.item6;
 
@@ -2473,7 +2488,6 @@ function renderMatchStatisticsAndList() {
       }).join('');
     }
 
-    // 종합 정보 요약바 렌더러
     function renderSummaryBar(blue, red) {
       const blueKills = blue.reduce((s, m) => s + m.kills, 0);
       const redKills = red.reduce((s, m) => s + m.kills, 0);
@@ -2513,13 +2527,10 @@ function renderMatchStatisticsAndList() {
       `;
     }
 
-    // 아코디언 테이블 HTML 생성
     function renderDetailTable(team, teamColor, teamWon) {
       const rLabel = isRemake ? '다시하기' : (teamWon ? '승리' : '패배');
-      
       const teamKills = team.reduce((sum, member) => sum + member.kills, 0);
       
-      // 등수(customRank) 매기기 위한 임의 점수 공식
       team.forEach(member => {
         const kdaVal = member.deaths === 0 ? (member.kills + member.assists) * 1.2 : (member.kills + member.assists) / member.deaths;
         const kpVal = teamKills > 0 ? ((member.kills + member.assists) / teamKills) * 100 : 0;
@@ -2551,13 +2562,11 @@ function renderMatchStatisticsAndList() {
         const gameName = p.riotIdGameName || p.summonerName || '알 수 없음';
         const tagLine = p.riotIdTagline || 'KR1';
         
-        // 스펠 이미지
         const spell1Obj = Object.values(state.spells).find(s => s.key == p.summoner1Id);
         const spell2Obj = Object.values(state.spells).find(s => s.key == p.summoner2Id);
         const spell1Img = spell1Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell1Obj.id}.png` : '';
         const spell2Img = spell2Obj ? `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/spell/${spell2Obj.id}.png` : '';
 
-        // 룬 이미지
         let rune1Img = '';
         let rune2Img = '';
         if (p.perks && p.perks.styles) {
@@ -2577,7 +2586,6 @@ function renderMatchStatisticsAndList() {
           }
         }
 
-        // 아이템 6칸 + 장신구 1칸
         const itemIds = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5];
         const trinketId = p.item6;
         
@@ -2589,12 +2597,10 @@ function renderMatchStatisticsAndList() {
           ? `<div class="detail-item-slot trinket-slot"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${trinketId}.png"></div>` 
           : `<div class="detail-item-slot empty trinket-slot"></div>`;
 
-        // 제어 와드
         const detailWardHtml = p.visionWardsBoughtInGame > 0 
           ? `<div class="detail-item-slot ward-slot" title="제어 와드 구매량: ${p.visionWardsBoughtInGame}"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/2055.png"></div>` 
           : `<div class="detail-item-slot empty ward-slot"></div>`;
 
-        // 개별 플레이어 퀘스트 보상 정보
         let pQuestHtml = `<div class="detail-item-slot quest-slot empty"></div>`;
         if (p.roleBoundItem > 0) {
           pQuestHtml = `<div class="detail-item-slot quest-slot role-bound-item" title="퀘스트 아이템"><img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/item/${p.roleBoundItem}.png"></div>`;
@@ -2606,16 +2612,13 @@ function renderMatchStatisticsAndList() {
           `;
         }
 
-        // OP Score 등수
         const isMvpOrAce = p.customRank === 1;
         const badgeText = isMvpOrAce ? (teamWon ? 'MVP' : 'ACE') : `${p.customRank}th`;
         const badgeClass = isMvpOrAce ? (teamWon ? 'badge-mvp' : 'badge-ace') : 'badge-normal';
         const formattedScore = p.customScore.toFixed(1);
 
-        // KDA 및 킬관여율
         const kp = teamKills > 0 ? Math.round(((p.kills + p.assists) / teamKills) * 100) : 0;
 
-        // 피해량 비율
         const dealPct = Math.min((p.totalDamageDealtToChampions / maxDamage) * 100, 100);
         const takenPct = Math.min((p.totalDamageTaken / maxDamageTaken) * 100, 100);
 
@@ -2770,7 +2773,6 @@ function renderMatchStatisticsAndList() {
     matchElements.push(matchWrapper);
   });
 
-  // 20게임 요약 렌더링
   const totalGames = wins + losses;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const avgK = totalGames > 0 ? (tKills / totalGames).toFixed(1) : 0;
@@ -2778,11 +2780,9 @@ function renderMatchStatisticsAndList() {
   const avgA = totalGames > 0 ? (tAssists / totalGames).toFixed(1) : 0;
   const avgRatio = tDeaths > 0 ? ((tKills + tAssists) / tDeaths).toFixed(2) : 'Perfect';
 
-  // 모스트 챔피언 정렬 (플레이 횟수 기준)
   const sortedChamps = Object.keys(champStats).sort((a, b) => champStats[b].count - champStats[a].count).slice(0, 3);
   const mostChampHtml = sortedChamps.map(c => {
     const s = champStats[c];
-    const r = s.d > 0 ? ((s.k + s.a) / s.d).toFixed(2) : 'Perfect';
     return `
       <div class="most-champ-item">
         <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${c}.png">
@@ -2794,7 +2794,6 @@ function renderMatchStatisticsAndList() {
     `;
   }).join('');
 
-  // 포지션 바그래프
   const totalPosGames = Object.values(roleCount).reduce((a, b) => a + b, 0);
   const maxRole = Math.max(...Object.values(roleCount), 1);
   const renderPosBar = (role, icon) => {
@@ -2845,6 +2844,9 @@ function renderMatchStatisticsAndList() {
 
   // 매치 리스트 DOM 추가
   matchElements.forEach(el => elements.matchList.appendChild(el));
+
+  // 페이지네이션 바 렌더링 호출
+  renderPagination();
 }
 
 // 자동완성: 최근 검색어 저장
@@ -3045,7 +3047,7 @@ async function changeMatchPage(page) {
 
   state.matchSearching = true;
   elements.matchSearchBtn.disabled = true;
-  elements.matchSearchBtn.textContent = '검색 중...';
+  elements.matchSearchBtn.textContent = '로딩 중...';
   
   // 화면 상단 대시보드로 자연스러운 스크롤 포커스 이동
   const scrollTarget = document.getElementById('match-dashboard');
@@ -3054,8 +3056,15 @@ async function changeMatchPage(page) {
   }
 
   try {
-    // 프로필 정보는 놔두고 전적 리스트만 오프셋에 맞추어 새로 로드
-    await loadMatchHistory(puuid);
+    const pageSize = 20;
+    const startIndex = (page - 1) * pageSize;
+    const neededIds = state.matchIds.slice(startIndex, startIndex + pageSize);
+    const missingIds = neededIds.filter(id => !state.matchDetails[id]);
+
+    if (missingIds.length > 0) {
+      await loadMatchDetails(missingIds, true);
+    }
+    renderMatchStatisticsAndList();
   } catch (error) {
     elements.matchList.innerHTML = `
       <div class="match-error">
@@ -3072,16 +3081,18 @@ window.changeMatchPage = changeMatchPage;
 
 // 페이지네이션 바 렌더러
 function renderPagination() {
-  // 기존 페이지네이션이 있는 경우 중복 생성 방지를 위해 제거
   const existPg = document.getElementById('match-pagination');
   if (existPg) existPg.remove();
+
+  if (!state.matchIds || state.matchIds.length === 0) return;
 
   const container = document.createElement('div');
   container.className = 'pagination-container';
   container.id = 'match-pagination';
 
   const currentPage = state.matchPage || 1;
-  const hasNextPage = state.matchIds && state.matchIds.length === 20;
+  const pageSize = 20;
+  const totalPages = Math.ceil(state.matchIds.length / pageSize);
 
   // 1. '이전' 버튼
   const prevBtn = document.createElement('button');
@@ -3092,22 +3103,16 @@ function renderPagination() {
   }
   container.appendChild(prevBtn);
 
-  // 2. 페이지 번호 버튼들 (기본적으로 최소 5페이지를 보여주거나 현재 페이지 뒤에 1페이지 여유를 두고 렌더링)
-  const maxPages = hasNextPage ? Math.max(currentPage + 1, 5) : currentPage;
-  const endPage = Math.max(maxPages, 5); // 최소 5페이지까지 번호 생성
+  // 2. 페이지 번호 버튼들 (현재 페이지 기준으로 적절히 분배하여 표시)
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, startPage + 4);
+  const adjustedStartPage = Math.max(1, endPage - 4);
 
-  for (let i = 1; i <= endPage; i++) {
+  for (let i = adjustedStartPage; i <= endPage; i++) {
     const pageBtn = document.createElement('button');
     pageBtn.className = `pg-btn num-btn ${currentPage === i ? 'active' : ''}`;
-    
-    // 현재 페이지보다 더 뒷번호인데 다음 페이지가 존재하지 않는 마지막 단계라면 클릭할 수 없도록 비활성화
-    const isClickable = i <= currentPage || (i > currentPage && hasNextPage);
-    if (!isClickable) {
-      pageBtn.classList.add('disabled');
-    }
-    
     pageBtn.textContent = i;
-    if (currentPage !== i && isClickable) {
+    if (currentPage !== i) {
       pageBtn.addEventListener('click', () => changeMatchPage(i));
     }
     container.appendChild(pageBtn);
@@ -3115,9 +3120,9 @@ function renderPagination() {
 
   // 3. '다음' 버튼
   const nextBtn = document.createElement('button');
-  nextBtn.className = `pg-btn next-btn ${!hasNextPage ? 'disabled' : ''}`;
+  nextBtn.className = `pg-btn next-btn ${currentPage === totalPages ? 'disabled' : ''}`;
   nextBtn.innerHTML = '다음 &gt;';
-  if (hasNextPage) {
+  if (currentPage < totalPages) {
     nextBtn.addEventListener('click', () => changeMatchPage(currentPage + 1));
   }
   container.appendChild(nextBtn);

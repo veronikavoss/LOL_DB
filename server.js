@@ -125,3 +125,12 @@ app.listen(PORT, () => {
   console.log(`LOL DB 서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
   console.log('Riot API 프록시 준비 완료');
 });
+
+// 전역 에러 핸들러 추가
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ Uncaught Exception thrown:', err);
+});

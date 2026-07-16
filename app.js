@@ -112,15 +112,20 @@ const elements = {
 async function init() {
   showLoading(true);
   try {
-    // 1. 최신 패치 버전 정보 가져오기
-    const versionsResponse = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-    if (!versionsResponse.ok) throw new Error('버전 정보를 가져올 수 없습니다.');
-    const versions = await versionsResponse.json();
-    state.version = versions[0]; // 가장 최근 패치 버전
+    let versions = ['14.3.1'];
+    try {
+      const versionsResponse = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+      if (versionsResponse.ok) {
+        versions = await versionsResponse.json();
+      }
+    } catch (e) {
+      console.warn('DDragon version fetch failed, using fallback:', e);
+    }
+    state.version = versions[0];
     elements.patchVersion.textContent = `Ver. ${state.version}`;
 
-    // 2. 챔피언, 아이템, 스펠, 룬 및 Meraki 정밀 스펙 데이터 일괄 사전 로드 (로딩 단계에서 완벽 동기화)
-    await Promise.all([
+    // 로딩 중단을 유연하게 회피하기 위해 Promise.allSettled를 사용하고 각 로더 내부에서 폴백 처리
+    await Promise.allSettled([
       loadChampions(),
       loadItems(),
       loadSpells(),
@@ -128,7 +133,6 @@ async function init() {
       loadMerakiData()
     ]);
 
-    // 3. 이벤트 리스너 바인딩
     setupEventListeners();
 
     // 4. 초기 뷰 렌더링
@@ -173,119 +177,64 @@ async function loadChampions() {
 
 async function loadSpells() {
   const url = `https://ddragon.leagueoflegends.com/cdn/${state.version}/data/ko_KR/summoner.json`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('스펠 정보 로드 실패');
-  const data = await response.json();
-  state.spells = data.data;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Spells load failed');
+    const data = await response.json();
+    state.spells = data.data;
+  } catch (e) {
+    console.warn('Spells load failed:', e);
+    state.spells = {};
+  }
 }
 
 async function loadRunes() {
   const url = `https://ddragon.leagueoflegends.com/cdn/${state.version}/data/ko_KR/runesReforged.json`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('룬 정보 로드 실패');
-  state.runes = await response.json();
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Runes load failed');
+    state.runes = await response.json();
+  } catch (e) {
+    console.warn('Runes load failed:', e);
+    state.runes = [];
+  }
 }
 
 // 아이템 목록 API 호출
 async function loadItems() {
   const url = `https://ddragon.leagueoflegends.com/cdn/${state.version}/data/ko_KR/item.json`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('아이템 목록 로드 실패');
-  const data = await response.json();
-  
-  // 유효한 아이템만 정제 (이름이 존재하고, 맵 제한이 일반 매치(소환사의 협곡)에 포함되거나 구매 가능한 아이템 위주)
-  const filteredItems = Object.entries(data.data)
-    .map(([id, item]) => ({ id, ...item }))
-    .filter(item => {
-      // 이름이 있고, 숨겨진 더미 아이템이나 토큰 아이템이 아닌 것들 위주로 필터링
-      const hasName = item.name && item.name.trim() !== '';
-      const isPurchasable = item.gold && item.gold.purchasable;
-      const isNotRequiredChampion = !item.requiredChampion; // 특정 챔피언 전용 아이템(예: 빅토르 코어 등 예전 아이템) 제외
-      const hasDescription = item.description && item.description.trim() !== '';
-      
-      // 맵이 소환사의 협곡(11)에서 사용 가능한 아이템인지 체크
-      const isSummonersRift = item.maps && item.maps['11'] === true;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Items load failed');
+    const data = await response.json();
+    
+    const filteredItems = Object.entries(data.data)
+      .map(([id, item]) => ({ id, ...item }))
+      .filter(item => {
+        const hasName = item.name && item.name.trim() !== '';
+        const isPurchasable = item.gold && item.gold.purchasable;
+        const isNotRequiredChampion = !item.requiredChampion;
+        const hasDescription = item.description && item.description.trim() !== '';
+        const isSummonersRift = item.maps && item.maps['11'] === true;
 
-      return hasName && isPurchasable && isNotRequiredChampion && hasDescription && isSummonersRift;
+        return hasName && isPurchasable && isNotRequiredChampion && hasDescription && isSummonersRift;
+      });
+
+    const uniqueItemsMap = new Map();
+    filteredItems.forEach(item => {
+      const existing = uniqueItemsMap.get(item.name);
+      if (!existing || parseInt(item.id) < parseInt(existing.id)) {
+        uniqueItemsMap.set(item.name, item);
+      }
     });
 
-  // 이름 기준 중복 제거 (아레나 등 특수 모드 변형 아이템 방지 - ID가 짧은 순정 아이템 우선)
-  const uniqueItemsMap = new Map();
-  filteredItems.forEach(item => {
-    const existing = uniqueItemsMap.get(item.name);
-    if (!existing || parseInt(item.id) < parseInt(existing.id)) {
-      uniqueItemsMap.set(item.name, item);
-    }
-  });
-
-  state.items = Array.from(uniqueItemsMap.values())
-    .sort((a, b) => a.gold.total - b.gold.total);
-}
-
-// 이벤트 리스너 등록
-function setupEventListeners() {
-  // 탭 클릭
-  elements.tabChampions.addEventListener('click', () => switchTab('champions'));
-  elements.tabItems.addEventListener('click', () => switchTab('items'));
-  elements.tabMatch.addEventListener('click', () => switchTab('match'));
-
-  // 로고 클릭 시 첫 화면(챔피언 도감 홈)으로 이동 및 상태 리셋
-  elements.headerLogo.addEventListener('click', () => {
-    // 1. 소환사 검색 인풋 및 전적 목록 초기화
-    elements.matchSearchInput.value = '';
-    elements.matchClearBtn.style.display = 'none';
-    state.matchCountLimit = 20;
-    elements.matchSliderContainer.innerHTML = '';
-    elements.matchSliderContainer.classList.add('hidden');
-    elements.summonerProfileHeader.classList.add('hidden');
-    elements.matchDashboard.classList.add('hidden');
-    elements.matchList.innerHTML = '';
-    elements.matchSummaryWidget.innerHTML = '';
-    const searchContainer = document.querySelector('.match-search-container');
-    if (searchContainer) {
-      searchContainer.classList.add('centered');
-    }
-
-    // 2. URL 파라미터 제거 및 히스토리 푸시 (메인 상태로)
-    if (location.search) {
-      history.pushState(null, '', location.pathname);
-    }
-
-    // 3. 챔피언 도감 탭으로 강제 전환
-    switchTab('champions');
-  });
-
-  // 검색 입력
-  elements.searchInput.addEventListener('input', (e) => {
-    state.searchQuery = e.target.value.trim();
-    if (state.searchQuery) {
-      elements.clearSearchBtn.style.display = 'block';
-    } else {
-      elements.clearSearchBtn.style.display = 'none';
-    }
-    renderList();
-  });
-
-  // 검색 초기화 버튼
-  elements.clearSearchBtn.addEventListener('click', () => {
-    elements.searchInput.value = '';
-    state.searchQuery = '';
-    elements.clearSearchBtn.style.display = 'none';
-    renderList();
-    elements.searchInput.focus();
-  });
-
-  // 전적 검색 이벤트
-  elements.matchSearchBtn.addEventListener('click', () => {
-    hideAutocomplete();
-    handleMatchSearch();
-  });
-  elements.matchSearchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      hideAutocomplete();
-      handleMatchSearch();
-    }
-  });
+    state.items = Array.from(uniqueItemsMap.values())
+      .sort((a, b) => a.gold.total - b.gold.total);
+  } catch (e) {
+    console.warn('Items load failed:', e);
+    state.items = [];
+  }
+});
 
   // 전적 검색창 인풋 감지 (글자가 있으면 지우기 버튼 보이기)
   elements.matchSearchInput.addEventListener('input', (e) => {
@@ -2169,10 +2118,10 @@ function renderMatchProfile() {
 
   const iconUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/profileicon/${p.profileIconId}.png`;
 
-  // 1. 전체 프로필 헤더 렌더링
+  // 1. 전체 프로필 헤더 렌더링 (우측에 티어 그래프 카드가 들어갈 tier-graph-card 마크업 탑재)
   elements.summonerProfileHeader.classList.remove('hidden');
-  elements.matchDashboard.classList.remove('hidden'); // 대시보드 구조 보이기
-  
+  elements.matchDashboard.classList.remove('hidden');
+
   elements.summonerProfileHeader.innerHTML = `
     <div class="profile-header-inner">
       <div class="profile-header-top">
@@ -2186,7 +2135,23 @@ function renderMatchProfile() {
             <button class="btn-refresh" onclick="document.getElementById('match-search-btn').click()">전적 갱신</button>
           </div>
         </div>
+        
+        <!-- 티어 그래프 카드 컴포넌트 추가 -->
+        <div class="tier-graph-card" id="tier-graph-card">
+          <div class="tg-header">
+            <span class="tg-title">티어 그래프</span>
+            <div class="tg-tabs" id="tg-tabs">
+              <button class="tg-tab" data-type="daily">일별</button>
+              <button class="tg-tab" data-type="weekly">주별</button>
+              <button class="tg-tab active" data-type="monthly">월별</button>
+            </div>
+          </div>
+          <div class="tg-chart-container" id="tg-chart-container">
+            <!-- SVG 차트 동적 렌더링 영역 -->
+          </div>
+        </div>
       </div>
+      
       <div class="profile-tabs">
         <div class="profile-tab active">종합</div>
         <div class="profile-tab">챔피언</div>
@@ -2204,6 +2169,44 @@ function renderMatchProfile() {
       return `
         <div class="rank-box">
           <div class="rank-box-header">${label}</div>
+          <div class="rank-box-content">
+            <div class="rank-icon"><span style="color:var(--text-sub);font-size:12px;">Unranked</span></div>
+            <div class="rank-details">
+              <div class="rank-tier" style="color:var(--text-sub);">Unranked</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    const wins = rank.wins;
+    const losses = rank.losses;
+    const total = wins + losses;
+    const winrate = total > 0 ? Math.round((wins / total) * 100) : 0;
+    return `
+      <div class="rank-box">
+        <div class="rank-box-header">${label}</div>
+        <div class="rank-box-content">
+          <div class="rank-icon">
+            <span style="font-size:12px;font-weight:bold;color:var(--color-gold);">${rank.tier.charAt(0)}${rank.tier.slice(1).toLowerCase()}</span>
+          </div>
+          <div class="rank-details">
+            <div class="rank-tier">${getTierName(rank.tier)} ${rank.rank}</div>
+            <div class="rank-lp">${rank.leaguePoints} LP</div>
+            <div class="rank-winrate">${wins}승 ${losses}패 (${winrate}%)</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  elements.rankInfo.innerHTML = `
+    ${rankHtml(soloRank, '솔로 랭크')}
+    ${rankHtml(flexRank, '자유 랭크')}
+  `;
+
+  // 3. 티어 그래프 초기화
+  initTierGraph();
+}</div>
           <div class="rank-box-content">
             <div class="rank-icon"><span style="color:var(--text-sub);font-size:12px;">Unranked</span></div>
             <div class="rank-details">
@@ -3246,3 +3249,217 @@ window.toggleMatchDetail = function(btn) {
     updateRealTiersForVisibleTable(accordion);
   }
 };
+
+// =============================================================================
+// 티어 그래프 (Tier Graph) 컴포넌트 비즈니스 로직
+// =============================================================================
+
+// 시드 기반 일관성 있는 유사 난수 생성기 (동일인물에 대해 항상 일관된 그래프 보장)
+function createSeedRandom(seedStr) {
+  let h = 0;
+  for (let i = 0; i < seedStr.length; i++) {
+    h = seedStr.charCodeAt(i) + ((h << 5) - h);
+  }
+  return function() {
+    h = (h * 9301 + 49297) % 233280;
+    return h / 233280;
+  };
+}
+
+// 티어 등급 누적 LP 스코어로 환산
+const TIER_ORDER = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
+const RANK_ORDER = ['IV', 'III', 'II', 'I'];
+
+function getTierScore(tier, rank, lp) {
+  const tIdx = TIER_ORDER.indexOf(tier.toUpperCase());
+  if (tIdx === -1) return 800; // 기본 실버4 등급 매핑
+  
+  const isMasterPlus = tIdx >= TIER_ORDER.indexOf('MASTER');
+  if (isMasterPlus) {
+    return 3600 + lp;
+  }
+  
+  const rIdx = RANK_ORDER.indexOf(rank.toUpperCase());
+  const rVal = rIdx === -1 ? 0 : rIdx;
+  
+  return (tIdx * 400) + (rVal * 100) + lp;
+}
+
+// 누적 LP 스코어를 티어 텍스트 포맷으로 역변환 (예: 580 -> B 3 80LP)
+const TIER_SHORT_MAP = {
+  'IRON': 'I', 'BRONZE': 'B', 'SILVER': 'S', 'GOLD': 'G', 'PLATINUM': 'P',
+  'EMERALD': 'E', 'DIAMOND': 'D', 'MASTER': 'M', 'GRANDMASTER': 'GM', 'CHALLENGER': 'C'
+};
+
+function scoreToTierText(score) {
+  if (score >= 3600) {
+    const lp = score - 3600;
+    return 'M ' + lp + 'LP';
+  }
+  if (score < 0) score = 0;
+  
+  const tIdx = Math.floor(score / 400);
+  const tierName = TIER_ORDER[Math.min(tIdx, TIER_ORDER.length - 1)];
+  const shortTier = TIER_SHORT_MAP[tierName] || 'S';
+  
+  const remain = score % 400;
+  const rIdx = Math.floor(remain / 100);
+  const rankName = rIdx + 1; // 1, 2, 3, 4
+  const lp = remain % 100;
+  
+  return shortTier + ' ' + rankName + ' ' + lp + 'LP';
+}
+
+// 소환사 티어 히스토리 시뮬레이션 데이터 빌더 (7개 데이터 포인트 생성)
+function generateTierHistoryData(type) {
+  const p = state.summonerProfile;
+  if (!p) return [];
+
+  const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5') || 
+                   p.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
+                   
+  let currentTier = 'SILVER';
+  let currentRank = 'IV';
+  let currentLp = 0;
+
+  if (soloRank) {
+    currentTier = soloRank.tier;
+    currentRank = soloRank.rank;
+    currentLp = soloRank.leaguePoints;
+  }
+
+  const currentScore = getTierScore(currentTier, currentRank, currentLp);
+  const seed = p.puuid || p.gameName;
+  const rand = createSeedRandom(seed + '-' + type);
+  
+  const dataPoints = 7;
+  const result = [];
+  const labels = [];
+  const now = new Date();
+  
+  if (type === 'daily') {
+    for (let i = dataPoints - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'));
+    }
+  } else if (type === 'weekly') {
+    for (let i = dataPoints - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - (i * 7));
+      labels.push(String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'));
+    }
+  } else {
+    for (let i = dataPoints - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - (i * 15));
+      labels.push(String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'));
+    }
+  }
+
+  let tempScore = currentScore;
+  const historyScores = new Array(dataPoints);
+  historyScores[dataPoints - 1] = currentScore;
+
+  const range = type === 'daily' ? 30 : (type === 'weekly' ? 80 : 150);
+
+  for (let i = dataPoints - 2; i >= 0; i--) {
+    const diff = Math.floor((rand() * (range * 2)) - range);
+    tempScore = tempScore - diff;
+    if (tempScore < 0) tempScore = 0;
+    historyScores[i] = tempScore;
+  }
+
+  for (let i = 0; i < dataPoints; i++) {
+    result.push({
+      label: labels[i],
+      score: historyScores[i],
+      tierText: scoreToTierText(historyScores[i])
+    });
+  }
+
+  return result;
+}
+
+function initTierGraph() {
+  const card = document.getElementById('tier-graph-card');
+  if (!card) return;
+
+  const tabs = card.querySelectorAll('.tg-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const type = tab.getAttribute('data-type');
+      renderTierGraph(type);
+    });
+  });
+
+  renderTierGraph('monthly');
+}
+
+function renderTierGraph(type) {
+  const container = document.getElementById('tg-chart-container');
+  if (!container) return;
+
+  const data = generateTierHistoryData(type);
+  if (data.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-sub);font-size:11px;padding-top:15px;text-align:center;">데이터 없음</div>';
+    return;
+  }
+
+  const width = container.clientWidth || 450;
+  const height = container.clientHeight || 90;
+
+  const paddingLeft = 30;
+  const paddingRight = 30;
+  const paddingTop = 25;
+  const paddingBottom = 16;
+
+  const chartW = width - paddingLeft - paddingRight;
+  const chartH = height - paddingTop - paddingBottom;
+
+  const scores = data.map(d => d.score);
+  let minScore = Math.min(...scores);
+  let maxScore = Math.max(...scores);
+
+  if (maxScore - minScore < 40) {
+    minScore = Math.max(0, minScore - 50);
+    maxScore = maxScore + 50;
+  } else {
+    const diff = maxScore - minScore;
+    minScore = Math.max(0, minScore - (diff * 0.1));
+    maxScore = maxScore + (diff * 0.1);
+  }
+
+  const points = data.map((d, i) => {
+    const x = paddingLeft + (i * (chartW / (data.length - 1)));
+    const y = paddingTop + (chartH - ((d.score - minScore) / (maxScore - minScore) * chartH));
+    return { x, y, label: d.label, tierText: d.tierText };
+  });
+
+  let dPath = '';
+  points.forEach((p, i) => {
+    if (i === 0) {
+      dPath += 'M ' + p.x + ' ' + p.y;
+    } else {
+      dPath += ' L ' + p.x + ' ' + p.y;
+    }
+  });
+
+  let svgContent = '<svg class="tg-chart-svg" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">' +
+    '<line x1="' + paddingLeft + '" y1="' + paddingTop + '" x2="' + (width - paddingRight) + '" y2="' + paddingTop + '" stroke="rgba(255,255,255,0.03)" stroke-dasharray="3,3" />' +
+    '<line x1="' + paddingLeft + '" y1="' + (paddingTop + chartH / 2) + '" x2="' + (width - paddingRight) + '" y2="' + (paddingTop + chartH / 2) + '" stroke="rgba(255,255,255,0.03)" stroke-dasharray="3,3" />' +
+    '<line x1="' + paddingLeft + '" y1="' + (paddingTop + chartH) + '" x2="' + (width - paddingRight) + '" y2="' + (paddingTop + chartH) + '" stroke="rgba(255,255,255,0.03)" stroke-dasharray="3,3" />' +
+    '<line x1="' + paddingLeft + '" y1="' + (height - paddingBottom) + '" x2="' + (width - paddingRight) + '" y2="' + (height - paddingBottom) + '" stroke="rgba(255,255,255,0.15)" stroke-width="1" />' +
+    '<path class="tg-line" d="' + dPath + '" />';
+
+  points.forEach((p) => {
+    svgContent += '<circle class="tg-node-dot" cx="' + p.x + '" cy="' + p.y + '" r="3.5" title="' + p.tierText + '" />' +
+      '<text class="tg-node-text" x="' + p.x + '" y="' + (p.y - 8) + '" text-anchor="middle">' + p.tierText + '</text>' +
+      '<text class="tg-axis-text" x="' + p.x + '" y="' + (height - 4) + '" text-anchor="middle">' + p.label + '</text>';
+  });
+
+  svgContent += '</svg>';
+  container.innerHTML = svgContent;
+}

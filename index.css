@@ -2190,8 +2190,9 @@ body {
 
 /* 티어 그래프 카드 스타일 */
 .tier-graph-card {
-  width: 480px;
-  height: 125px;
+  width: auto;
+  flex: 1; /* 가용 공간 전체 채우기 */
+  height: 110px;
   background: rgba(22, 30, 46, 0.55);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -2199,7 +2200,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin-left: auto; /* 우측 끝으로 밀기 */
+  margin-top: 42px; /* 전적 갱신 버튼 상단선과 정밀 수평 매칭 */
   flex-shrink: 0;
 }
 

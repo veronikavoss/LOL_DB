@@ -134,12 +134,9 @@ async function init() {
     ]);
 
     setupEventListeners();
-
-    // 4. 초기 뷰 렌더링
     renderFilters();
     renderList();
 
-    // 5. URL 파라미터가 있는 경우 전적 검색 자동 수행
     const params = new URLSearchParams(location.search);
     const name = params.get('name');
     const tag = params.get('tag');
@@ -149,8 +146,7 @@ async function init() {
       handleMatchSearch();
     }
   } catch (error) {
-    console.error('초기화 에러:', error);
-    alert('데이터를 로드하는 중 문제가 발생했습니다. 페이지를 새로고침 해주세요.');
+    console.error('Init error:', error);
   } finally {
     showLoading(false);
   }
@@ -168,11 +164,15 @@ function showLoading(show) {
 // 챔피언 목록 API 호출
 async function loadChampions() {
   const url = `https://ddragon.leagueoflegends.com/cdn/${state.version}/data/ko_KR/champion.json`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('챔피언 목록 로드 실패');
-  const data = await response.json();
-  // 정렬된 배열 형태로 저장
-  state.champions = Object.values(data.data).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Champions load failed');
+    const data = await response.json();
+    state.champions = Object.values(data.data).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  } catch (e) {
+    console.warn('DDragon champions cdn failed:', e);
+    state.champions = [];
+  }
 }
 
 async function loadSpells() {
@@ -208,18 +208,23 @@ async function loadItems() {
     if (!response.ok) throw new Error('Items load failed');
     const data = await response.json();
     
+    // 유효한 아이템만 정제 (이름이 존재하고, 맵 제한이 일반 매치(소환사의 협곡)에 포함되거나 구매 가능한 아이템 위주)
     const filteredItems = Object.entries(data.data)
       .map(([id, item]) => ({ id, ...item }))
       .filter(item => {
+        // 이름이 있고, 숨겨진 더미 아이템이나 토큰 아이템이 아닌 것들 위주로 필터링
         const hasName = item.name && item.name.trim() !== '';
         const isPurchasable = item.gold && item.gold.purchasable;
-        const isNotRequiredChampion = !item.requiredChampion;
+        const isNotRequiredChampion = !item.requiredChampion; // 특정 챔피언 전용 아이템(예: 빅토르 코어 등 예전 아이템) 제외
         const hasDescription = item.description && item.description.trim() !== '';
+        
+        // 맵이 소환사의 협곡(11)에서 사용 가능한 아이템인지 체크
         const isSummonersRift = item.maps && item.maps['11'] === true;
 
         return hasName && isPurchasable && isNotRequiredChampion && hasDescription && isSummonersRift;
       });
 
+    // 이름 기준 중복 제거 (아레나 등 특수 모드 변형 아이템 방지 - ID가 짧은 순정 아이템 우선)
     const uniqueItemsMap = new Map();
     filteredItems.forEach(item => {
       const existing = uniqueItemsMap.get(item.name);
@@ -234,7 +239,72 @@ async function loadItems() {
     console.warn('Items load failed:', e);
     state.items = [];
   }
-});
+}
+
+// 이벤트 리스너 등록
+function setupEventListeners() {
+  // 탭 클릭
+  elements.tabChampions.addEventListener('click', () => switchTab('champions'));
+  elements.tabItems.addEventListener('click', () => switchTab('items'));
+  elements.tabMatch.addEventListener('click', () => switchTab('match'));
+
+  // 로고 클릭 시 첫 화면(챔피언 도감 홈)으로 이동 및 상태 리셋
+  elements.headerLogo.addEventListener('click', () => {
+    // 1. 소환사 검색 인풋 및 전적 목록 초기화
+    elements.matchSearchInput.value = '';
+    elements.matchClearBtn.style.display = 'none';
+    state.matchCountLimit = 20;
+    elements.matchSliderContainer.innerHTML = '';
+    elements.matchSliderContainer.classList.add('hidden');
+    elements.summonerProfileHeader.classList.add('hidden');
+    elements.matchDashboard.classList.add('hidden');
+    elements.matchList.innerHTML = '';
+    elements.matchSummaryWidget.innerHTML = '';
+    const searchContainer = document.querySelector('.match-search-container');
+    if (searchContainer) {
+      searchContainer.classList.add('centered');
+    }
+
+    // 2. URL 파라미터 제거 및 히스토리 푸시 (메인 상태로)
+    if (location.search) {
+      history.pushState(null, '', location.pathname);
+    }
+
+    // 3. 챔피언 도감 탭으로 강제 전환
+    switchTab('champions');
+  });
+
+  // 검색 입력
+  elements.searchInput.addEventListener('input', (e) => {
+    state.searchQuery = e.target.value.trim();
+    if (state.searchQuery) {
+      elements.clearSearchBtn.style.display = 'block';
+    } else {
+      elements.clearSearchBtn.style.display = 'none';
+    }
+    renderList();
+  });
+
+  // 검색 초기화 버튼
+  elements.clearSearchBtn.addEventListener('click', () => {
+    elements.searchInput.value = '';
+    state.searchQuery = '';
+    elements.clearSearchBtn.style.display = 'none';
+    renderList();
+    elements.searchInput.focus();
+  });
+
+  // 전적 검색 이벤트
+  elements.matchSearchBtn.addEventListener('click', () => {
+    hideAutocomplete();
+    handleMatchSearch();
+  });
+  elements.matchSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      hideAutocomplete();
+      handleMatchSearch();
+    }
+  });
 
   // 전적 검색창 인풋 감지 (글자가 있으면 지우기 버튼 보이기)
   elements.matchSearchInput.addEventListener('input', (e) => {
@@ -2118,10 +2188,10 @@ function renderMatchProfile() {
 
   const iconUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/profileicon/${p.profileIconId}.png`;
 
-  // 1. 전체 프로필 헤더 렌더링 (우측에 티어 그래프 카드가 들어갈 tier-graph-card 마크업 탑재)
+  // 1. 전체 프로필 헤더 렌더링
   elements.summonerProfileHeader.classList.remove('hidden');
-  elements.matchDashboard.classList.remove('hidden');
-
+  elements.matchDashboard.classList.remove('hidden'); // 대시보드 구조 보이기
+  
   elements.summonerProfileHeader.innerHTML = `
     <div class="profile-header-inner">
       <div class="profile-header-top">
@@ -2151,7 +2221,6 @@ function renderMatchProfile() {
           </div>
         </div>
       </div>
-      
       <div class="profile-tabs">
         <div class="profile-tab active">종합</div>
         <div class="profile-tab">챔피언</div>
@@ -2187,6 +2256,7 @@ function renderMatchProfile() {
         <div class="rank-box-header">${label}</div>
         <div class="rank-box-content">
           <div class="rank-icon">
+            <!-- 티어 이미지 매핑은 향후 고도화 가능. 현재는 텍스트 위주 -->
             <span style="font-size:12px;font-weight:bold;color:var(--color-gold);">${rank.tier.charAt(0)}${rank.tier.slice(1).toLowerCase()}</span>
           </div>
           <div class="rank-details">
@@ -2206,42 +2276,6 @@ function renderMatchProfile() {
 
   // 3. 티어 그래프 초기화
   initTierGraph();
-}</div>
-          <div class="rank-box-content">
-            <div class="rank-icon"><span style="color:var(--text-sub);font-size:12px;">Unranked</span></div>
-            <div class="rank-details">
-              <div class="rank-tier" style="color:var(--text-sub);">Unranked</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-    const wins = rank.wins;
-    const losses = rank.losses;
-    const total = wins + losses;
-    const winrate = total > 0 ? Math.round((wins / total) * 100) : 0;
-    return `
-      <div class="rank-box">
-        <div class="rank-box-header">${label}</div>
-        <div class="rank-box-content">
-          <div class="rank-icon">
-            <!-- 티어 이미지 매핑은 향후 고도화 가능. 현재는 텍스트 위주 -->
-            <span style="font-size:12px;font-weight:bold;color:var(--color-gold);">${rank.tier.charAt(0)}${rank.tier.slice(1).toLowerCase()}</span>
-          </div>
-          <div class="rank-details">
-            <div class="rank-tier">${getTierName(rank.tier)} ${rank.rank}</div>
-            <div class="rank-lp">${rank.leaguePoints} LP</div>
-            <div class="rank-winrate">${wins}승 ${losses}패 (${winrate}%)</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  elements.rankInfo.innerHTML = `
-    ${rankHtml(soloRank, '솔로 랭크')}
-    ${rankHtml(flexRank, '자유 랭크')}
-  `;
 }
 
 

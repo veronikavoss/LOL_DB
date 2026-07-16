@@ -3344,8 +3344,8 @@ function scoreToTierText(score) {
   return shortTier + ' ' + rankName + ' ' + lp + 'LP';
 }
 
-// 소환사 티어 히스토리 시뮬레이션 데이터 빌더 (7개 데이터 포인트 생성)
-function generateTierHistoryData(type) {
+// 소환사 티어 히스토리 실제 누적 데이터 연동
+async function generateTierHistoryData(type) {
   const p = state.summonerProfile;
   if (!p) return [];
 
@@ -3363,31 +3363,44 @@ function generateTierHistoryData(type) {
   }
 
   const currentScore = getTierScore(currentTier, currentRank, currentLp);
+  
+  // 백엔드에서 누적된 티어 히스토리 데이터 로드
+  let realHistory = {};
+  try {
+    const res = await fetch(`/api/tiers/history/${p.puuid}`);
+    if (res.ok) {
+      realHistory = await res.json();
+    }
+  } catch (e) {
+    console.error('티어 히스토리 로드 실패:', e);
+  }
+
+  const dateKeys = Object.keys(realHistory).sort((a, b) => new Date(a) - new Date(b));
+  
   const seed = p.puuid || p.gameName;
   const rand = createSeedRandom(seed + '-' + type);
-  
   const dataPoints = 7;
   const result = [];
-  const labels = [];
+  const dateArray = [];
   const now = new Date();
   
   if (type === 'daily') {
     for (let i = dataPoints - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
-      labels.push(String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'));
+      dateArray.push(d);
     }
   } else if (type === 'weekly') {
     for (let i = dataPoints - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - (i * 7));
-      labels.push(String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'));
+      dateArray.push(d);
     }
   } else {
     for (let i = dataPoints - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - (i * 15));
-      labels.push(String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'));
+      dateArray.push(d);
     }
   }
 
@@ -3397,16 +3410,41 @@ function generateTierHistoryData(type) {
 
   const range = type === 'daily' ? 30 : (type === 'weekly' ? 80 : 150);
 
+  // 과거 시점 역순으로 데이터 채우기
   for (let i = dataPoints - 2; i >= 0; i--) {
-    const diff = Math.floor((rand() * (range * 2)) - range);
-    tempScore = tempScore - diff;
-    if (tempScore < 0) tempScore = 0;
-    historyScores[i] = tempScore;
+    const targetDate = dateArray[i];
+    let foundScore = null;
+    
+    // 현재 타겟 날짜와 가장 근접한(3일 이내) 실제 기록 탐색
+    for (let j = dateKeys.length - 1; j >= 0; j--) {
+      const recordDate = new Date(dateKeys[j]);
+      if (recordDate <= targetDate) {
+        const diffDays = Math.floor((targetDate - recordDate) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays <= 3) {
+          const rec = realHistory[dateKeys[j]];
+          foundScore = getTierScore(rec.tier, rec.rank, rec.leaguePoints);
+          break;
+        }
+      }
+    }
+
+    if (foundScore !== null) {
+      historyScores[i] = foundScore;
+      tempScore = foundScore;
+    } else {
+      // 기록이 없는 빈 과거 날짜는 시뮬레이션 난수로 부드럽게 폴백(채움) 처리
+      const diff = Math.floor((rand() * (range * 2)) - range);
+      tempScore = tempScore - diff;
+      if (tempScore < 0) tempScore = 0;
+      historyScores[i] = tempScore;
+    }
   }
 
   for (let i = 0; i < dataPoints; i++) {
+    const d = dateArray[i];
+    const lbl = String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
     result.push({
-      label: labels[i],
+      label: lbl,
       score: historyScores[i],
       tierText: scoreToTierText(historyScores[i])
     });
@@ -3421,24 +3459,26 @@ function initTierGraph() {
 
   const tabs = card.querySelectorAll('.tg-tab');
   tabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
+    tab.addEventListener('click', async (e) => {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const type = tab.getAttribute('data-type');
-      renderTierGraph(type);
+      await renderTierGraph(type);
     });
   });
 
   renderTierGraph('monthly');
 }
 
-function renderTierGraph(type) {
+async function renderTierGraph(type) {
   const container = document.getElementById('tg-chart-container');
   if (!container) return;
+  
+  container.innerHTML = '<div style="color:var(--text-sub);font-size:11px;padding-top:35px;text-align:center;">로딩 중...</div>';
 
-  const data = generateTierHistoryData(type);
+  const data = await generateTierHistoryData(type);
   if (data.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-sub);font-size:11px;padding-top:15px;text-align:center;">데이터 없음</div>';
+    container.innerHTML = '<div style="color:var(--text-sub);font-size:11px;padding-top:35px;text-align:center;">데이터 없음</div>';
     return;
   }
 

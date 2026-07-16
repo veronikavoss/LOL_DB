@@ -1,7 +1,15 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const app = express();
 const PORT = 8080;
+
+// 로컬 캐시 디렉터리 보장
+const CACHE_DIR = path.join(__dirname, 'cache', 'tiers');
+if (!fs.existsSync(CACHE_DIR)) {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+}
 
 // Riot API 키 (개발용 - 24시간마다 갱신 필요)
 const RIOT_API_KEY = 'RGAPI-c1c92d56-b806-44a5-8a02-dd588b118605';
@@ -75,16 +83,61 @@ app.get('/api/riot/summoner/:puuid', async (req, res) => {
   }
 });
 
-// 3. PUUID → 랭크 정보 (League-V4)
+// 3. PUUID → 랭크 정보 (League-V4) 및 티어 히스토리 누적
 app.get('/api/riot/league/:puuid', async (req, res) => {
   try {
     const { puuid } = req.params;
     const url = `https://kr.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`;
     const data = await riotApiRequest(url);
+    
+    // 로컬 티어 이력에 저장 (RANKED_SOLO_5x5 기준)
+    const soloQueueData = data.find(entry => entry.queueType === 'RANKED_SOLO_5x5');
+    if (soloQueueData) {
+      const filePath = path.join(CACHE_DIR, `${puuid}.json`);
+      let historyData = {};
+      
+      if (fs.existsSync(filePath)) {
+        const fileContent = await fsPromises.readFile(filePath, 'utf-8');
+        try {
+          historyData = JSON.parse(fileContent);
+        } catch (e) {
+          console.error('티어 캐시 파일 파싱 오류:', e);
+        }
+      }
+      
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      historyData[today] = {
+        tier: soloQueueData.tier,
+        rank: soloQueueData.rank,
+        leaguePoints: soloQueueData.leaguePoints
+      };
+      
+      await fsPromises.writeFile(filePath, JSON.stringify(historyData, null, 2), 'utf-8');
+    }
+
     res.json(data);
   } catch (error) {
     console.error('League API 오류:', error.message);
     res.status(error.status || 500).json({ error: error.message });
+  }
+});
+
+// 3-1. PUUID → 누적 티어 히스토리 반환
+app.get('/api/tiers/history/:puuid', async (req, res) => {
+  try {
+    const { puuid } = req.params;
+    const filePath = path.join(CACHE_DIR, `${puuid}.json`);
+    
+    if (fs.existsSync(filePath)) {
+      const fileContent = await fsPromises.readFile(filePath, 'utf-8');
+      const historyData = JSON.parse(fileContent);
+      res.json(historyData);
+    } else {
+      res.json({}); // 기록이 없으면 빈 객체 반환
+    }
+  } catch (error) {
+    console.error('Tier History API 오류:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

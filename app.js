@@ -3332,16 +3332,16 @@ function scoreToTierText(score) {
   }
   if (score < 0) score = 0;
   
-  const tIdx = Math.floor(score / 400);
-  const tierName = TIER_ORDER[Math.min(tIdx, TIER_ORDER.length - 1)];
+  const tIdx = Math.min(Math.floor(score / 400), TIER_ORDER.length - 1);
+  const tierName = TIER_ORDER[tIdx];
   const shortTier = TIER_SHORT_MAP[tierName] || 'S';
   
   const remain = score % 400;
-  const rIdx = Math.floor(remain / 100);
-  const rankName = rIdx + 1; // 1, 2, 3, 4
+  const rIdx = Math.min(Math.floor(remain / 100), 3);
+  const rankLabel = RANK_ORDER[rIdx]; // IV, III, II, I
   const lp = remain % 100;
   
-  return shortTier + ' ' + rankName + ' ' + lp + 'LP';
+  return shortTier + ' ' + rankLabel + ' ' + lp + 'LP';
 }
 
 // 소환사 티어 히스토리 실제 누적 데이터 연동
@@ -3432,10 +3432,15 @@ async function generateTierHistoryData(type) {
       historyScores[i] = foundScore;
       tempScore = foundScore;
     } else {
-      // 기록이 없는 빈 과거 날짜는 시뮬레이션 난수로 부드럽게 폴백(채움) 처리
-      const diff = Math.floor((rand() * (range * 2)) - range);
+      // 실제 기록이 없는 과거 날짜: 현재 티어 근처에서 아주 미세하게만 변동
+      const smallRange = type === 'daily' ? 8 : (type === 'weekly' ? 15 : 25);
+      const diff = Math.floor((rand() * (smallRange * 2)) - smallRange);
       tempScore = tempScore - diff;
-      if (tempScore < 0) tempScore = 0;
+      // 현재 스코어 기준 ±15% 범위 밖으로 벗어나지 못하도록 clamp
+      const lowerBound = Math.max(0, Math.floor(currentScore * 0.85));
+      const upperBound = Math.ceil(currentScore * 1.15);
+      if (tempScore < lowerBound) tempScore = lowerBound;
+      if (tempScore > upperBound) tempScore = upperBound;
       historyScores[i] = tempScore;
     }
   }

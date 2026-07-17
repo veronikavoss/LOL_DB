@@ -1310,9 +1310,8 @@ body {
   align-items: center;
   justify-content: space-between; /* 각 컬럼 블록 사이의 여백을 수학적으로 동일하게 자동 분할 */
   background: #282830;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
-  border-left: 4px solid #6b7280;
   color: var(--text-main);
   height: 100px;
   padding-left: 12px;
@@ -1321,12 +1320,12 @@ body {
 /* 결과별 색상 (승/패/다시하기) */
 .match-card.win {
   background: #28344e;
-  border-left-color: #5383e8;
+  border: 1px solid rgba(83, 131, 232, 0.45);
 }
 
 .match-card.lose {
   background: #59343b;
-  border-left-color: #e84057;
+  border: 1px solid rgba(232, 64, 87, 0.45);
 }
 
 /* 1. 게임 정보 바 */
@@ -1575,11 +1574,10 @@ body {
   color: var(--text-main);
 }
 
-/* 7. 아코디언 토글 버튼 */
 .mc-action {
-  width: 30px;
+  width: 38px; /* 약간 가로폭을 넓혀서 클릭하기 쉽게 조율 */
   height: 100%;
-  background: rgba(0,0,0,0.1);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1589,8 +1587,8 @@ body {
   transition: color 0.15s;
 }
 .mc-action:hover { color: var(--text-main); }
-.match-card.win .mc-action { background: #2f436e; }
-.match-card.lose .mc-action { background: #703c47; }
+.match-card.win .mc-action { background: transparent; }
+.match-card.lose .mc-action { background: transparent; }
 .mc-action svg {
   transition: transform 0.25s ease;
 }

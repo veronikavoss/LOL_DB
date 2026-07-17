@@ -1320,12 +1320,12 @@ body {
 /* 결과별 색상 (승/패/다시하기) */
 .match-card.win {
   background: #28344e;
-  border: 1px solid rgba(83, 131, 232, 0.45);
+  border: 1px solid #1a78de;
 }
 
 .match-card.lose {
   background: #59343b;
-  border: 1px solid rgba(232, 64, 87, 0.45);
+  border: 1px solid #e84057;
 }
 
 /* 1. 게임 정보 바 */
@@ -1577,18 +1577,23 @@ body {
 .mc-action {
   width: 38px; /* 약간 가로폭을 넓혀서 클릭하기 쉽게 조율 */
   height: 100%;
-  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
   color: var(--text-sub);
-  transition: color 0.15s;
+  transition: color 0.15s, background-color 0.15s;
 }
 .mc-action:hover { color: var(--text-main); }
-.match-card.win .mc-action { background: transparent; }
-.match-card.lose .mc-action { background: transparent; }
+.match-card.win .mc-action { 
+  background: rgba(0, 0, 0, 0.12); 
+  border-left: 1px solid rgba(83, 131, 232, 0.35); 
+}
+.match-card.lose .mc-action { 
+  background: rgba(0, 0, 0, 0.12); 
+  border-left: 1px solid rgba(232, 64, 87, 0.35); 
+}
 .mc-action svg {
   transition: transform 0.25s ease;
 }

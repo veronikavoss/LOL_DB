@@ -17,15 +17,15 @@ const state = {
   championDetails: {},
   // 로컬 로드된 챔피언 상세 스펙 캐시
   merakiChampions: null,
-  // 전적 검색 관련
+  // 전적 검색 DB 관련
   summonerProfile: null,   // { puuid, gameName, tagLine, summonerLevel, profileIconId, summonerId, ranks[] }
   matchIds: [],            // 매치 ID 배열
   matchDetails: {},        // { matchId: matchData } 캐시
   selectedMatchId: null,   // 선택된 매치 ID
   matchSearching: false,   // 검색 진행 중 플래그
-  matchPage: 1,            // 전적 검색 현재 페이지
+  matchPage: 1,            // 전적 검색 DB 현재 페이지
   cachedTiers: {},         // 각 PUUID별 실제 솔랭 티어 캐시
-  matchCountLimit: 20      // 전적 검색 시 분석 대상 경기 수 제한
+  matchCountLimit: 20      // 전적 검색 DB 시 분석 대상 경기 수 제한
 };
 
 // 역할군 영문 -> 국문 매핑
@@ -93,7 +93,7 @@ const elements = {
   // 도감 섹션 (탭 전환 시 숨기기/보이기)
   listSection: document.querySelector('.list-section'),
   detailPanel: document.getElementById('detail-panel'),
-  // 전적 검색 섹션
+  // 전적 검색 DB 섹션
   matchSection: document.getElementById('match-section'),
   matchSearchInput: document.getElementById('match-search-input'),
   matchSearchBtn: document.getElementById('match-search-btn'),
@@ -294,7 +294,7 @@ function setupEventListeners() {
     elements.searchInput.focus();
   });
 
-  // 전적 검색 이벤트
+  // 전적 검색 DB 이벤트
   elements.matchSearchBtn.addEventListener('click', () => {
     hideAutocomplete();
     handleMatchSearch();
@@ -306,13 +306,13 @@ function setupEventListeners() {
     }
   });
 
-  // 전적 검색창 인풋 감지 (글자가 있으면 지우기 버튼 보이기)
+  // 전적 검색 DB창 인풋 감지 (글자가 있으면 지우기 버튼 보이기)
   elements.matchSearchInput.addEventListener('input', (e) => {
     const val = e.target.value.trim();
     elements.matchClearBtn.style.display = val ? 'block' : 'none';
   });
 
-  // 전적 검색창 텍스트 일괄 클리어 (최근 검색어 데이터는 보존)
+  // 전적 검색 DB창 텍스트 일괄 클리어 (최근 검색어 데이터는 보존)
   elements.matchClearBtn.addEventListener('click', (e) => {
     e.stopPropagation(); // 외부 클릭 닫기 이벤트 차단
     elements.matchSearchInput.value = '';
@@ -383,7 +383,7 @@ function switchTab(tab) {
   elements.tabMatch.classList.remove('active');
 
   if (tab === 'match') {
-    // 전적 검색 탭: 도감 영역 숨기고 전적 영역 표시
+    // 전적 검색 DB 탭: 도감 영역 숨기고 전적 영역 표시
     elements.tabMatch.classList.add('active');
     elements.listSection.classList.add('hidden');
     elements.detailPanel.classList.add('hidden');
@@ -2016,7 +2016,7 @@ function getSkillSpecsHtml(merakiSpell) {
 }
 
 // ===========================
-// 전적 검색 기능
+// 전적 검색 DB 기능
 // ===========================
 
 // 큐 타입 ID → 한글 이름
@@ -2071,7 +2071,7 @@ function getTierName(tier) {
   return TIER_MAP[tier] || tier;
 }
 
-// 전적 검색 핸들러
+// 전적 검색 DB 핸들러
 async function handleMatchSearch() {
   const input = elements.matchSearchInput.value.trim();
   if (!input || state.matchSearching) return;
@@ -2522,7 +2522,7 @@ function renderMatchStatisticsAndList() {
         return `
           <div class="p-player ${p.puuid === puuid ? 'is-me' : ''}">
             <img src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${p.championName}.png">
-            <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
+            <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색 DB">${gameName}</span>
           </div>
         `;
       }).join('');
@@ -2681,7 +2681,7 @@ function renderMatchStatisticsAndList() {
                 </div>
                 <div class="td-summoner-name-box">
                   <div class="summoner-name-link">
-                    <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색">${gameName}</span>
+                    <span onclick="event.stopPropagation(); searchSummonerFromLink('${gameName}', '${tagLine}')" style="cursor: pointer;" title="전적 검색 DB">${gameName}</span>
                   </div>
                   <div class="summoner-level-txt real-tier-holder" data-puuid="${p.puuid}" data-fallback="${getFakeTierForPlayer(p, puuid)}">${getFakeTierForPlayer(p, puuid)}</div>
                 </div>

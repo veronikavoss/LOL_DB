@@ -706,10 +706,10 @@ body {
 }
 
 /* ===========================
-   전적 검색 탭 스타일
+   전적 검색 DB 탭 스타일
    =========================== */
 
-/* 전적 검색 섹션 레이아웃 */
+/* 전적 검색 DB 섹션 레이아웃 */
 .match-section {
   display: flex;
   flex-direction: column;
@@ -809,7 +809,7 @@ body {
   border-color: var(--color-active);
 }
 
-/* 전적 검색창 지우기 X 버튼 */
+/* 전적 검색 DB창 지우기 X 버튼 */
 .match-clear-btn {
   position: absolute;
   right: 12px;

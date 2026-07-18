@@ -1743,7 +1743,7 @@ body {
 
 .team-table th {
   text-align: center; /* 헤더 텍스트 가운데 정렬 */
-  padding: 6px 8px;
+  padding: 6px 6px;
   color: var(--text-sub);
   font-weight: 500;
   border-bottom: 1px solid var(--border-color);
@@ -1751,7 +1751,7 @@ body {
 
 .team-table th:first-child {
   text-align: center; /* 첫 번째 챔피언 헤더는 왼쪽 정렬 유지 */
-  padding-left: 12px;
+  /* padding-left: 12px; */
 }
 
 .team-table td {

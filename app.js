@@ -90,7 +90,7 @@ const elements = {
   listGrid: document.getElementById('list-grid'),
   emptyDetailState: document.getElementById('empty-detail-state'),
   detailContentArea: document.getElementById('detail-content-area'),
-  // 도감 섹션 (탭 전환 시 숨기기/보이기)
+  // DB 섹션 (탭 전환 시 숨기기/보이기)
   listSection: document.querySelector('.list-section'),
   detailPanel: document.getElementById('detail-panel'),
   // 전적 검색 DB 섹션
@@ -248,7 +248,7 @@ function setupEventListeners() {
   elements.tabItems.addEventListener('click', () => switchTab('items'));
   elements.tabMatch.addEventListener('click', () => switchTab('match'));
 
-  // 로고 클릭 시 첫 화면(챔피언 도감 홈)으로 이동 및 상태 리셋
+  // 로고 클릭 시 첫 화면(챔피언 DB 홈)으로 이동 및 상태 리셋
   elements.headerLogo.addEventListener('click', () => {
     // 1. 소환사 검색 인풋 및 전적 목록 초기화
     elements.matchSearchInput.value = '';
@@ -270,7 +270,7 @@ function setupEventListeners() {
       history.pushState(null, '', location.pathname);
     }
 
-    // 3. 챔피언 도감 탭으로 강제 전환
+    // 3. 챔피언 DB 탭으로 강제 전환
     switchTab('champions');
   });
 
@@ -383,7 +383,7 @@ function switchTab(tab) {
   elements.tabMatch.classList.remove('active');
 
   if (tab === 'match') {
-    // 전적 검색 DB 탭: 도감 영역 숨기고 전적 영역 표시
+    // 전적 검색 DB 탭: DB 영역 숨기고 전적 영역 표시
     elements.tabMatch.classList.add('active');
     elements.listSection.classList.add('hidden');
     elements.detailPanel.classList.add('hidden');
@@ -398,7 +398,7 @@ function switchTab(tab) {
       }
     }
   } else {
-    // 챔피언/아이템 탭: 전적 영역 숨기고 도감 영역 표시
+    // 챔피언/아이템 탭: 전적 영역 숨기고 DB 영역 표시
     elements.matchSection.classList.add('hidden');
     elements.listSection.classList.remove('hidden');
     elements.detailPanel.classList.remove('hidden');

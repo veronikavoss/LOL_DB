@@ -1320,12 +1320,12 @@ body {
 /* 결과별 색상 (승/패/다시하기) */
 .match-card.win {
   background: #28344e;
-  border: 1px solid #1a78de;
+  border: 4px solid #3092fa9c;
 }
 
 .match-card.lose {
-  background: #59343b;
-  border: 1px solid #e84057;
+  background: #59343b9b;
+  border: 4px solid #e840568a;
 }
 
 /* 1. 게임 정보 바 */
@@ -1587,12 +1587,12 @@ body {
 }
 .mc-action:hover { color: var(--text-main); }
 .match-card.win .mc-action { 
-  background: rgba(0, 0, 0, 0.12); 
-  border-left: 1px solid rgba(83, 131, 232, 0.35); 
+  background: rgba(83, 131, 232, 0.30); 
+  border-left: 1px solid rgba(83, 131, 232, 0.5); 
 }
 .match-card.lose .mc-action { 
-  background: rgba(0, 0, 0, 0.12); 
-  border-left: 1px solid rgba(232, 64, 87, 0.35); 
+  background: rgba(232, 64, 87, 0.3); 
+  border-left: 1px solid rgba(232, 64, 87, 0.5); 
 }
 .mc-action svg {
   transition: transform 0.25s ease;

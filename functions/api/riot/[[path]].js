@@ -35,7 +35,15 @@ export async function onRequest(context) {
     else if (endpoint === 'matches' && pathParts.length >= 2) {
       // /api/riot/matches/:puuid
       const puuid = pathParts[1];
-      targetUrl = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20`;
+      const { searchParams } = new URL(context.request.url);
+      const start = searchParams.get('start') || '0';
+      const count = searchParams.get('count') || '20';
+      const startTime = searchParams.get('startTime') || '';
+      
+      targetUrl = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
+      if (startTime) {
+        targetUrl += `&startTime=${startTime}`;
+      }
     }
     else if (endpoint === 'match' && pathParts.length >= 2) {
       // /api/riot/match/:matchId

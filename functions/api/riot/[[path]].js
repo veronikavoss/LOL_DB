@@ -1,3 +1,29 @@
+async function riotApiRequest(url, apiKey, retries = 3) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, {
+      headers: {
+        'X-Riot-Token': apiKey
+      }
+    });
+
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get('Retry-After') || '2', 10);
+      console.log(`[Rate Limit] 429 감지 - ${retryAfter}초 대기 후 재시도... (${attempt + 1}/${retries})`);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    return response;
+  }
+  
+  // 모든 재시도 소진 시 마지막 상태의 fetch 직접 수행
+  return fetch(url, {
+    headers: {
+      'X-Riot-Token': apiKey
+    }
+  });
+}
+
 export async function onRequest(context) {
   // context.params.path는 /api/riot/ 이후의 URL 경로 배열입니다.
   // 예: /api/riot/account/Name/Tag -> ['account', 'Name', 'Tag']
@@ -54,12 +80,8 @@ export async function onRequest(context) {
       return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 });
     }
 
-    // Riot 서버로 패치 요청
-    const riotResponse = await fetch(targetUrl, {
-      headers: {
-        'X-Riot-Token': RIOT_API_KEY
-      }
-    });
+    // Riot 서버로 패치 요청 (429 Rate Limit 자동 재시도 포함)
+    const riotResponse = await riotApiRequest(targetUrl, RIOT_API_KEY);
 
     if (!riotResponse.ok) {
       const errorText = await riotResponse.text();

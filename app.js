@@ -2292,51 +2292,50 @@ function initMatchSlider() {
   if (!container) return;
 
   const totalMatches = state.matchIds?.length || 0;
-  if (totalMatches === 0) {
+  // 10경기 미만인 경우 슬라이더 제공 불필요
+  if (totalMatches < 10) {
+    container.innerHTML = '';
     container.classList.add('hidden');
     return;
   }
 
-  // 슬라이더가 이미 생성되어 동작 중인 경우, 숨김 해제만 진행
-  if (container.querySelector('#match-count-slider')) {
-    container.classList.remove('hidden');
-    return;
-  }
-
-  // 인덱스별 매핑 단계 정의 (0: 10, 1: 20, 2: 50, 3: 100, 4: 전체)
-  const steps = [10, 20, 50, 100, totalMatches];
+  // 총 경기 수에 맞춰 동적으로 슬라이더 단계 빌드 (표준 단계 중 totalMatches 미만만 유지하고 마지막에 totalMatches 추가)
+  const standardSteps = [10, 20, 50, 100].filter(s => s < totalMatches);
+  const steps = [...standardSteps, totalMatches];
+  const maxIndex = steps.length - 1;
   
   // 현재 state.matchCountLimit에 매칭되는 슬라이더 인덱스 찾기
   let initialValueIndex = steps.indexOf(state.matchCountLimit);
   if (initialValueIndex === -1) {
-    // 매치되지 않는 값일 경우 가장 가까운 값 매핑
     initialValueIndex = steps.findIndex(s => s >= state.matchCountLimit);
-    if (initialValueIndex === -1) initialValueIndex = 4;
+    if (initialValueIndex === -1) initialValueIndex = maxIndex;
   }
 
   // 배지 텍스트 결정 함수
   const getBadgeText = (index) => {
     const idx = parseInt(index, 10);
-    if (idx === 4) {
+    if (steps[idx] === totalMatches) {
       return `전체 (${totalMatches}경기)`;
     }
     return `최근 ${steps[idx]}경기`;
   };
 
-  // 슬라이더 HTML 생성 (min=0, max=4, step=1 로 균등 5분할 매핑)
+  // 슬라이더 틱 눈금 HTML 동적 생성
+  const ticksHtml = steps.map(s => {
+    if (s === totalMatches) return `<span>전체</span>`;
+    return `<span>${s}</span>`;
+  }).join('');
+
+  // 슬라이더 HTML 생성
   container.innerHTML = `
     <div class="slider-header-row">
       <span class="slider-title">분석 대상 경기 수 설정</span>
       <span class="slider-value-badge" id="slider-val-badge">${getBadgeText(initialValueIndex)}</span>
     </div>
     <div class="slider-wrapper">
-      <input type="range" class="match-count-slider" id="match-count-slider" min="0" max="4" step="1" value="${initialValueIndex}">
+      <input type="range" class="match-count-slider" id="match-count-slider" min="0" max="${maxIndex}" step="1" value="${initialValueIndex}">
       <div class="slider-ticks">
-        <span>10</span>
-        <span>20</span>
-        <span>50</span>
-        <span>100</span>
-        <span>전체</span>
+        ${ticksHtml}
       </div>
     </div>
   `;
@@ -2355,14 +2354,18 @@ function initMatchSlider() {
     state.matchCountLimit = steps[idx];
     state.matchPage = 1;
 
-    // 필요한 매치 상세 정보 점진 로드 (캐시에 없는 것만)
-    const neededIds = state.matchIds.slice(0, state.matchCountLimit);
-    const missingIds = neededIds.filter(id => !state.matchDetails[id]);
-    if (missingIds.length > 0) {
-      await loadMatchDetails(missingIds, true);
+    try {
+      // 필요한 매치 상세 정보 점진 로드 (캐시에 없는 것만)
+      const neededIds = state.matchIds.slice(0, state.matchCountLimit);
+      const missingIds = neededIds.filter(id => !state.matchDetails[id]);
+      if (missingIds.length > 0) {
+        await loadMatchDetails(missingIds, true);
+      }
+    } catch (err) {
+      console.error('슬라이더 조작에 따른 매치 로드 에러:', err);
+    } finally {
+      renderMatchStatisticsAndList();
     }
-
-    renderMatchStatisticsAndList();
   });
 }
 
@@ -3101,17 +3104,13 @@ async function changeMatchPage(page) {
     if (missingIds.length > 0) {
       await loadMatchDetails(missingIds, true);
     }
-    renderMatchStatisticsAndList();
   } catch (error) {
-    elements.matchList.innerHTML = `
-      <div class="match-error">
-        <p>❌ 전적 목록 로드 실패: ${error.message}</p>
-      </div>
-    `;
+    console.error('페이지 전환 중 매치 로드 실패:', error);
   } finally {
     state.matchSearching = false;
     elements.matchSearchBtn.disabled = false;
     elements.matchSearchBtn.textContent = '검색';
+    renderMatchStatisticsAndList();
   }
 }
 window.changeMatchPage = changeMatchPage;
@@ -3123,13 +3122,16 @@ function renderPagination() {
 
   if (!state.matchIds || state.matchIds.length === 0) return;
 
-  const container = document.createElement('div');
-  container.className = 'pagination-container';
-  container.id = 'match-pagination';
-
   const currentPage = state.matchPage || 1;
   const pageSize = 20;
   const totalPages = Math.ceil(state.matchIds.length / pageSize);
+
+  // 20경기 이하(1페이지 이하)인 경우 페이지네이션을 그리지 않음
+  if (totalPages <= 1) return;
+
+  const container = document.createElement('div');
+  container.className = 'pagination-container';
+  container.id = 'match-pagination';
 
   // 1. '이전' 버튼
   const prevBtn = document.createElement('button');

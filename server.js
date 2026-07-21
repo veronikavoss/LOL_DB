@@ -148,9 +148,17 @@ app.get('/api/riot/matches/:puuid', async (req, res) => {
     const start = req.query.start || 0;
     const count = req.query.count || 20;
     const startTime = req.query.startTime || '';
+    const queue = req.query.queue || '';
+    const type = req.query.type || '';
     let url = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
     if (startTime) {
       url += `&startTime=${startTime}`;
+    }
+    if (queue) {
+      url += `&queue=${queue}`;
+    }
+    if (type) {
+      url += `&type=${type}`;
     }
     const data = await riotApiRequest(url);
     res.json(data);

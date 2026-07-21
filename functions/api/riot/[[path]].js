@@ -65,10 +65,18 @@ export async function onRequest(context) {
       const start = searchParams.get('start') || '0';
       const count = searchParams.get('count') || '20';
       const startTime = searchParams.get('startTime') || '';
+      const queue = searchParams.get('queue') || '';
+      const type = searchParams.get('type') || '';
       
       targetUrl = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
       if (startTime) {
         targetUrl += `&startTime=${startTime}`;
+      }
+      if (queue) {
+        targetUrl += `&queue=${queue}`;
+      }
+      if (type) {
+        targetUrl += `&type=${type}`;
       }
     }
     else if (endpoint === 'match' && pathParts.length >= 2) {

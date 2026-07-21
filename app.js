@@ -637,40 +637,100 @@ async function showChampionDetail(championId) {
   // 역할군 국문 맵핑
   const tagsText = detailData.tags.map(t => CHAMPION_TAG_MAP[t] || t).join(', ');
 
+  // 카운터 픽 챔피언 데이터 임의 생성 (랜덤 시드 기반 3개)
+  let counters = [];
+  if (state.champions && state.champions.length > 0) {
+    const others = state.champions.filter(c => c.id !== championId);
+    const seed = championId.length + (detailData.key ? parseInt(detailData.key) : 0);
+    counters = [
+      others[seed % others.length],
+      others[(seed + 5) % others.length],
+      others[(seed + 13) % others.length]
+    ].filter(Boolean);
+  }
+
+  let counterHtml = `
+    <div class="section-title">카운터 픽</div>
+    <div class="list-grid" style="grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 12px; padding-top: 10px;">
+  `;
+  counters.forEach(c => {
+    counterHtml += `
+      <div class="card-item" onclick="selectById('${c.id}')" style="cursor:pointer; width: 70px; padding: 8px;">
+        <div class="card-img-wrapper" style="margin-bottom: 6px;">
+          <img class="card-img" src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${c.id}.png" alt="${c.name}">
+        </div>
+        <div class="card-name" style="font-size: 11px; width: 100%; white-space: normal; text-align: center;">${c.name}</div>
+      </div>
+    `;
+  });
+  counterHtml += `</div>`;
+
   elements.detailContentArea.innerHTML = `
-    <div class="detail-header">
-      <img class="detail-portrait" src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${championId}.png" alt="${detailData.name}">
-      <div class="detail-title-group">
-        <span class="detail-sub">${detailData.title}</span>
-        <h2 class="detail-title">${detailData.name}</h2>
-        <div class="detail-tags">
-          <span class="detail-tag">${tagsText}</span>
-          <span class="detail-tag">리소스: ${translateResource(detailData.partype)}</span>
+    <div class="champion-detail-tabs">
+      <button class="champ-tab-btn active" onclick="switchChampTab('detail')">상세 정보</button>
+      <button class="champ-tab-btn" onclick="switchChampTab('counter')">카운터 픽</button>
+    </div>
+
+    <div id="champ-tab-detail" class="champ-tab-content">
+      <div class="detail-header">
+        <img class="detail-portrait" src="https://ddragon.leagueoflegends.com/cdn/${state.version}/img/champion/${championId}.png" alt="${detailData.name}">
+        <div class="detail-title-group">
+          <span class="detail-sub">${detailData.title}</span>
+          <h2 class="detail-title">${detailData.name}</h2>
+          <div class="detail-tags">
+            <span class="detail-tag">${tagsText}</span>
+            <span class="detail-tag">리소스: ${translateResource(detailData.partype)}</span>
+          </div>
         </div>
       </div>
+
+      <!-- 챔피언 스토리 요약 -->
+      <div class="section-title">스토리</div>
+      <p class="item-description" style="margin-bottom: 20px;">${detailData.lore || detailData.blurb}</p>
+
+      <div class="detail-divider"></div>
+
+      <!-- 기본 능력치 -->
+      <div class="section-title">기본 능력치 (레벨업 당 상승치)</div>
+      <div class="stats-grid" style="margin-bottom: 24px;">
+        ${statsHtml}
+      </div>
+
+      <div class="detail-divider"></div>
+
+      <!-- 스킬 정보 -->
+      <div class="section-title">스킬 정보</div>
+      <div class="skills-container">
+        ${skillsHtml}
+      </div>
     </div>
-
-    <!-- 챔피언 스토리 요약 -->
-    <div class="section-title">스토리</div>
-    <p class="item-description" style="margin-bottom: 20px;">${detailData.lore || detailData.blurb}</p>
-
-    <div class="detail-divider"></div>
-
-    <!-- 기본 능력치 -->
-    <div class="section-title">기본 능력치 (레벨업 당 상승치)</div>
-    <div class="stats-grid" style="margin-bottom: 24px;">
-      ${statsHtml}
-    </div>
-
-    <div class="detail-divider"></div>
-
-    <!-- 스킬 정보 -->
-    <div class="section-title">스킬 정보</div>
-    <div class="skills-container">
-      ${skillsHtml}
+    
+    <div id="champ-tab-counter" class="champ-tab-content hidden">
+      ${counterHtml}
     </div>
   `;
 }
+
+// 챔피언 상세 탭 전환
+window.switchChampTab = function(tabName) {
+  const detailTab = document.getElementById('champ-tab-detail');
+  const counterTab = document.getElementById('champ-tab-counter');
+  const btns = document.querySelectorAll('.champ-tab-btn');
+  
+  if (detailTab && counterTab) {
+    if (tabName === 'detail') {
+      detailTab.classList.remove('hidden');
+      counterTab.classList.add('hidden');
+      btns[0].classList.add('active');
+      btns[1].classList.remove('active');
+    } else {
+      detailTab.classList.add('hidden');
+      counterTab.classList.remove('hidden');
+      btns[0].classList.remove('active');
+      btns[1].classList.add('active');
+    }
+  }
+};
 
 // 아이템 상세 표시
 function showItemDetail(itemId) {
@@ -2181,12 +2241,38 @@ async function searchSummoner(gameName, tagLine) {
   await loadMatchHistory(accountData.puuid);
 }
 
-// 프로필 영역 렌더링 (헤더 + 랭크 사이드바)
+  // 프로필 영역 렌더링 (헤더 + 랭크 사이드바)
 function renderMatchProfile() {
   const p = state.summonerProfile;
   if (!p) return;
 
   const iconUrl = `https://ddragon.leagueoflegends.com/cdn/${state.version}/img/profileicon/${p.profileIconId}.png`;
+  const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5') || null;
+  const flexRank = p.ranks.find(r => r.queueType === 'RANKED_FLEX_SR') || null;
+
+  function renderHeaderRank(rank, title) {
+    if (!rank) {
+      return `
+        <div class="header-rank-item">
+          <div class="header-rank-title">${title}</div>
+          <div class="header-unranked">Unranked</div>
+        </div>
+      `;
+    }
+    const tierImgUrl = `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/${rank.tier.toLowerCase()}.png`;
+    return `
+      <div class="header-rank-item">
+        <div class="header-rank-title">${title}</div>
+        <div class="header-rank-content">
+          <img src="${tierImgUrl}" alt="${rank.tier}" class="header-rank-img" onerror="this.src=''">
+          <div class="header-rank-text">
+            <div class="header-rank-name">${getTierName(rank.tier)} ${rank.rank}</div>
+            <div class="header-rank-lp">${rank.leaguePoints} LP</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   // 1. 전체 프로필 헤더 렌더링
   elements.summonerProfileHeader.classList.remove('hidden');
@@ -2195,14 +2281,26 @@ function renderMatchProfile() {
   elements.summonerProfileHeader.innerHTML = `
     <div class="profile-header-inner">
       <div class="profile-header-top">
-        <div class="profile-icon-wrap">
-          <img src="${iconUrl}" alt="프로필 아이콘">
-          <span class="profile-level">${p.summonerLevel}</span>
-        </div>
-        <div class="profile-info">
-          <h2>${p.gameName} <span class="profile-tag">#${p.tagLine}</span></h2>
-          <div class="profile-actions">
-            <button class="btn-refresh" onclick="document.getElementById('match-search-btn').click()">전적 갱신</button>
+        <div class="profile-header-left">
+          <div class="profile-icon-wrap">
+            <img src="${iconUrl}" alt="프로필 아이콘">
+            <span class="profile-level">${p.summonerLevel}</span>
+          </div>
+          <div class="profile-info">
+            <h2>
+              ${p.gameName} <span class="profile-tag">#${p.tagLine}</span>
+              <button class="btn-star" title="즐겨찾기">&#9733;</button>
+            </h2>
+            <div class="profile-ranks">
+              ${renderHeaderRank(soloRank, '래더 랭킹')}
+              ${renderHeaderRank(flexRank, '자유 랭킹')}
+            </div>
+            <div class="profile-actions">
+              <button class="btn-refresh" onclick="document.getElementById('match-search-btn').click()">전적 갱신</button>
+              <button class="btn-icon" title="옵션">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
           </div>
         </div>
         
@@ -2225,14 +2323,12 @@ function renderMatchProfile() {
         <div class="profile-tab active">종합</div>
         <div class="profile-tab">챔피언</div>
         <div class="profile-tab">인게임 정보</div>
+        <div class="profile-tab">매치 히스토리</div>
       </div>
     </div>
   `;
 
   // 2. 좌측 랭크 위젯 렌더링
-  const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
-  const flexRank = p.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
-
   function rankHtml(rank, label) {
     if (!rank) {
       return `
@@ -3310,9 +3406,8 @@ function getTierScore(tier, rank, lp) {
   const tIdx = TIER_ORDER.indexOf(tier.toUpperCase());
   if (tIdx === -1) return 800; // 기본 실버4 등급 매핑
   
-  const isMasterPlus = tIdx >= TIER_ORDER.indexOf('MASTER');
-  if (isMasterPlus) {
-    return 3600 + lp;
+  if (tIdx >= 7) { // MASTER (idx 7) 이상
+    return 2800 + lp;
   }
   
   const rIdx = RANK_ORDER.indexOf(rank.toUpperCase());
@@ -3321,145 +3416,237 @@ function getTierScore(tier, rank, lp) {
   return (tIdx * 400) + (rVal * 100) + lp;
 }
 
-// 누적 LP 스코어를 티어 텍스트 포맷으로 역변환 (예: 580 -> B 3 80LP)
-const TIER_SHORT_MAP = {
-  'IRON': 'I', 'BRONZE': 'B', 'SILVER': 'S', 'GOLD': 'G', 'PLATINUM': 'P',
-  'EMERALD': 'E', 'DIAMOND': 'D', 'MASTER': 'M', 'GRANDMASTER': 'GM', 'CHALLENGER': 'C'
-};
-
 function scoreToTierText(score) {
-  if (score >= 3600) {
-    const lp = score - 3600;
-    return 'M ' + lp + 'LP';
-  }
   if (score < 0) score = 0;
   
-  const tIdx = Math.min(Math.floor(score / 400), TIER_ORDER.length - 1);
+  if (score >= 2800) {
+    const lp = Math.round(score - 2800);
+    let tName = 'Master';
+    if (lp > 500 && lp <= 1000) tName = 'Grandmaster';
+    else if (lp > 1000) tName = 'Challenger';
+    return tName + ' ' + lp + 'LP';
+  }
+  
+  const tIdx = Math.min(Math.floor(score / 400), 6); // 다이아몬드(6)까지만 매핑
   const tierName = TIER_ORDER[tIdx];
-  const shortTier = TIER_SHORT_MAP[tierName] || 'S';
+  const capitalizedTier = tierName.charAt(0) + tierName.slice(1).toLowerCase();
   
   const remain = score % 400;
   const rIdx = Math.min(Math.floor(remain / 100), 3);
   const rankLabel = RANK_ORDER[rIdx]; // IV, III, II, I
-  const lp = remain % 100;
+  const lp = Math.round(remain % 100);
   
-  return shortTier + ' ' + rankLabel + ' ' + lp + 'LP';
+  return capitalizedTier + ' ' + rankLabel + ' ' + lp + 'LP';
 }
 
-// 소환사 티어 히스토리 실제 누적 데이터 연동
+// 이번 시즌 솔로 랭크 매치 데이터 기반 티어 히스토리 생성
+// 현재 티어에서 매치 승/패를 역산하여 과거 티어를 추정
+// Rate Limit 방지: 매치 ID 목록만 로딩하고 이미 캐시된 디테일만 사용
 async function generateTierHistoryData(type) {
   const p = state.summonerProfile;
   if (!p) return [];
 
-  const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5') || 
-                   p.ranks.find(r => r.queueType === 'RANKED_FLEX_SR');
-                   
-  let currentTier = 'SILVER';
-  let currentRank = 'IV';
-  let currentLp = 0;
+  const soloRank = p.ranks.find(r => r.queueType === 'RANKED_SOLO_5x5');
+  if (!soloRank) return [];
 
-  if (soloRank) {
-    currentTier = soloRank.tier;
-    currentRank = soloRank.rank;
-    currentLp = soloRank.leaguePoints;
+  const currentTier = soloRank.tier;
+  const currentRank = soloRank.rank;
+  const currentLp = soloRank.leaguePoints;
+  const currentScore = getTierScore(currentTier, currentRank, currentLp);
+  const totalWins = soloRank.wins || 0;
+  const totalLosses = soloRank.losses || 0;
+  const totalGames = totalWins + totalLosses;
+
+  if (totalGames === 0) {
+    const now = new Date();
+    return [{
+      label: String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0'),
+      score: currentScore,
+      tierText: scoreToTierText(currentScore)
+    }];
   }
 
-  const currentScore = getTierScore(currentTier, currentRank, currentLp);
-  
-  // 백엔드에서 누적된 티어 히스토리 데이터 로드
-  let realHistory = {};
+  // 이번 시즌 시작 시간 (2025년 1월 8일, epoch 초 단위)
+  const SEASON_START = Math.floor(new Date('2025-01-08T00:00:00Z').getTime() / 1000);
+
+  // 시즌 솔로 랭크 매치 ID만 로딩 (매치 ID 조회는 Rate Limit 소비가 적음)
+  let allMatchIds = [];
+  let offset = 0;
+  const batchSize = 100;
+
   try {
-    const res = await fetch(`/api/tiers/history/${p.puuid}`);
-    if (res.ok) {
-      realHistory = await res.json();
+    while (true) {
+      const url = `/api/riot/matches/${p.puuid}?start=${offset}&count=${batchSize}&startTime=${SEASON_START}&queue=420&type=ranked`;
+      const res = await fetch(url);
+      if (!res.ok) break;
+      const ids = await res.json();
+      if (!Array.isArray(ids) || ids.length === 0) break;
+      allMatchIds = allMatchIds.concat(ids);
+      if (ids.length < batchSize) break;
+      offset += batchSize;
+      if (allMatchIds.length >= 500) break;
     }
   } catch (e) {
-    console.error('티어 히스토리 로드 실패:', e);
+    console.error('시즌 매치 목록 로드 실패:', e);
   }
 
-  const dateKeys = Object.keys(realHistory).sort((a, b) => new Date(a) - new Date(b));
-  
-  const seed = p.puuid || p.gameName;
-  const rand = createSeedRandom(seed + '-' + type);
-  const dataPoints = 7;
-  const result = [];
-  const dateArray = [];
-  const now = new Date();
-  
-  if (type === 'daily') {
-    for (let i = dataPoints - 1; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      dateArray.push(d);
-    }
-  } else if (type === 'weekly') {
-    for (let i = dataPoints - 1; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - (i * 7));
-      dateArray.push(d);
-    }
-  } else {
-    for (let i = dataPoints - 1; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - (i * 15));
-      dateArray.push(d);
-    }
+  if (allMatchIds.length === 0) {
+    const now = new Date();
+    return [{
+      label: String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0'),
+      score: currentScore,
+      tierText: scoreToTierText(currentScore)
+    }];
   }
 
-  let tempScore = currentScore;
-  const historyScores = new Array(dataPoints);
-  historyScores[dataPoints - 1] = currentScore;
+  // 이미 state.matchDetails에 캐시된 매치 디테일만 활용 (추가 API 호출 없음)
+  // 캐시에 없는 매치는 승률 기반으로 추정
+  const winRate = totalGames > 0 ? totalWins / totalGames : 0.5;
+  const LP_WIN = 22;
+  const LP_LOSS = 18;
 
-  const range = type === 'daily' ? 30 : (type === 'weekly' ? 80 : 150);
+  // 매치 ID에서 타임스탬프 추출 (KR_12345678 형식 → Riot matchId에서 직접 추출 불가)
+  // 대신 캐시된 매치에서 gameCreation을 가져오거나, 매치 ID 순서(API 반환 순=최신 먼저)로 시간 추정
+  
+  // 캐시된 매치에서 승/패 정보와 날짜를 추출
+  const matchResults = []; // { gameCreation, win }
+  const uncachedCount = { total: 0 };
 
-  // 과거 시점 역순으로 데이터 채우기
-  for (let i = dataPoints - 2; i >= 0; i--) {
-    const targetDate = dateArray[i];
-    let foundScore = null;
-    
-    // 현재 타겟 날짜와 가장 근접한(3일 이내) 실제 기록 탐색
-    for (let j = dateKeys.length - 1; j >= 0; j--) {
-      const recordDate = new Date(dateKeys[j]);
-      if (recordDate <= targetDate) {
-        const diffDays = Math.floor((targetDate - recordDate) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 0 && diffDays <= 3) {
-          const rec = realHistory[dateKeys[j]];
-          foundScore = getTierScore(rec.tier, rec.rank, rec.leaguePoints);
-          break;
-        }
+  for (const matchId of allMatchIds) {
+    const match = state.matchDetails[matchId];
+    if (match && match.info) {
+      const me = match.info.participants.find(pp => pp.puuid === p.puuid);
+      if (me && match.info.queueId === 420) {
+        matchResults.push({
+          gameCreation: match.info.gameCreation,
+          win: me.win
+        });
+        continue;
       }
     }
+    uncachedCount.total++;
+  }
 
-    if (foundScore !== null) {
-      historyScores[i] = foundScore;
-      tempScore = foundScore;
+  // 캐시된 매치 시간순 정렬 (오래된 것 먼저)
+  matchResults.sort((a, b) => a.gameCreation - b.gameCreation);
+
+  // 캐시된 매치가 부족하면 승률 기반으로 가상 매치 타임라인 보충
+  // 시즌 시작 ~ 첫 캐시 매치 사이에 분산 배치
+  const seedRng = createSeedRandom(p.puuid);
+  
+  if (uncachedCount.total > 0 && matchResults.length > 0) {
+    const firstCachedTime = matchResults[0].gameCreation;
+    const seasonStartMs = SEASON_START * 1000;
+    const timeGap = firstCachedTime - seasonStartMs;
+    const interval = timeGap / (uncachedCount.total + 1);
+
+    for (let i = 0; i < uncachedCount.total; i++) {
+      const estimatedTime = seasonStartMs + interval * (i + 1);
+      matchResults.push({
+        gameCreation: estimatedTime,
+        win: seedRng() < winRate // 시드 기반 추정
+      });
+    }
+    // 다시 시간순 정렬
+    matchResults.sort((a, b) => a.gameCreation - b.gameCreation);
+  } else if (uncachedCount.total > 0 && matchResults.length === 0) {
+    // 캐시된 매치가 아예 없으면 전 구간에 균등 분포
+    const seasonStartMs = SEASON_START * 1000;
+    const now = Date.now();
+    const interval = (now - seasonStartMs) / (uncachedCount.total + 1);
+    for (let i = 0; i < uncachedCount.total; i++) {
+      matchResults.push({
+        gameCreation: seasonStartMs + interval * (i + 1),
+        win: seedRng() < winRate
+      });
+    }
+    matchResults.sort((a, b) => a.gameCreation - b.gameCreation);
+  }
+
+  // 현재 티어에서 역산하여 각 매치 시점의 예상 점수 계산
+  const scoreTimeline = new Array(matchResults.length + 1);
+  scoreTimeline[matchResults.length] = currentScore;
+
+  for (let i = matchResults.length - 1; i >= 0; i--) {
+    const prevScore = scoreTimeline[i + 1];
+    if (matchResults[i].win) {
+      scoreTimeline[i] = Math.max(0, prevScore - LP_WIN);
     } else {
-      // 실제 기록이 없는 과거 날짜: 현재 티어 근처에서 아주 미세하게만 변동
-      const smallRange = type === 'daily' ? 8 : (type === 'weekly' ? 15 : 25);
-      const diff = Math.floor((rand() * (smallRange * 2)) - smallRange);
-      tempScore = tempScore - diff;
-      // 현재 스코어 기준 ±15% 범위 밖으로 벗어나지 못하도록 clamp
-      const lowerBound = Math.max(0, Math.floor(currentScore * 0.85));
-      const upperBound = Math.ceil(currentScore * 1.15);
-      if (tempScore < lowerBound) tempScore = lowerBound;
-      if (tempScore > upperBound) tempScore = upperBound;
-      historyScores[i] = tempScore;
+      scoreTimeline[i] = prevScore + LP_LOSS;
     }
   }
 
-  for (let i = 0; i < dataPoints; i++) {
-    const d = dateArray[i];
-    const lbl = String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+  // 3. 고정된 시간축(버킷)을 생성하여 데이터 할당
+  const result = [];
+  const nowMs = Date.now();
+  const ONE_DAY = 86400000;
+  
+  let buckets = [];
+  if (type === 'daily') {
+    // 최근 20일
+    for (let i = 19; i >= 0; i--) {
+      const d = new Date(nowMs - i * ONE_DAY);
+      buckets.push({ date: d, label: String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') });
+    }
+  } else if (type === 'weekly') {
+    // 최근 12주 (매주 월요일 기준)
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(nowMs - i * 7 * ONE_DAY);
+      const day = d.getDay();
+      d.setDate(d.getDate() - ((day + 6) % 7)); // 월요일로
+      buckets.push({ date: d, label: String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') });
+    }
+  } else {
+    // 최근 6개월
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      d.setDate(1);
+      buckets.push({ date: d, label: d.getFullYear().toString().slice(2) + '.' + String(d.getMonth() + 1).padStart(2, '0') });
+    }
+  }
+
+  // 각 버킷(시간점)에 대해, 그 시점(해당 날짜의 끝)까지의 가장 최근 점수를 찾음
+  const sortedMatches = matchResults.map((m, i) => ({ time: m.gameCreation, score: scoreTimeline[i + 1] }));
+  
+  for (const b of buckets) {
+    let bucketEndTime = b.date.getTime();
+    if (type === 'daily' || type === 'weekly') {
+      // 해당 일의 23:59:59 기준
+      const d = new Date(bucketEndTime);
+      d.setHours(23, 59, 59, 999);
+      bucketEndTime = d.getTime();
+    } else {
+      // 해당 월의 마지막 날 기준
+      const d = new Date(b.date.getFullYear(), b.date.getMonth() + 1, 0, 23, 59, 59, 999);
+      bucketEndTime = d.getTime();
+    }
+    
+    // 이 시간 이전의 가장 최근 매치 찾기
+    let latestScore = scoreTimeline[0]; // 맨 초기 점수
+    for (const sm of sortedMatches) {
+      if (sm.time <= bucketEndTime) {
+        latestScore = sm.score;
+      } else {
+        break;
+      }
+    }
+    
+    // 만약 버킷 시간이 미래이거나 오늘이면 currentScore 사용
+    if (bucketEndTime >= nowMs) {
+      latestScore = currentScore;
+    }
+    
     result.push({
-      label: lbl,
-      score: historyScores[i],
-      tierText: scoreToTierText(historyScores[i])
+      label: b.label,
+      tooltipDate: (b.date.getMonth() + 1) + '월 ' + b.date.getDate() + '일',
+      score: latestScore,
+      tierText: scoreToTierText(latestScore)
     });
   }
 
   return result;
 }
-
 function initTierGraph() {
   const card = document.getElementById('tier-graph-card');
   if (!card) return;
@@ -3489,13 +3676,22 @@ async function renderTierGraph(type) {
     return;
   }
 
-  const width = container.clientWidth || 450;
-  const height = container.clientHeight || 90;
+  // 툴팁 엘리먼트 생성 (최상위 컨테이너 또는 body에 추가)
+  let tooltip = document.getElementById('tg-global-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'tg-global-tooltip';
+    tooltip.className = 'tg-tooltip';
+    document.body.appendChild(tooltip);
+  }
 
-  const paddingLeft = 30;
-  const paddingRight = 30;
-  const paddingTop = 25;
-  const paddingBottom = 16;
+  const width = container.clientWidth || 450;
+  const height = container.clientHeight || 135;
+
+  const paddingLeft = 70; // Y축 긴 텍스트(Grandmaster 등) 공간 확보
+  const paddingRight = 15;
+  const paddingTop = 20;
+  const paddingBottom = 25;
 
   const chartW = width - paddingLeft - paddingRight;
   const chartH = height - paddingTop - paddingBottom;
@@ -3504,43 +3700,105 @@ async function renderTierGraph(type) {
   let minScore = Math.min(...scores);
   let maxScore = Math.max(...scores);
 
-  if (maxScore - minScore < 40) {
-    minScore = Math.max(0, minScore - 50);
-    maxScore = maxScore + 50;
+  if (maxScore - minScore < 400) {
+    const center = (maxScore + minScore) / 2;
+    minScore = Math.max(0, center - 200);
+    maxScore = center + 200;
   } else {
     const diff = maxScore - minScore;
     minScore = Math.max(0, minScore - (diff * 0.1));
     maxScore = maxScore + (diff * 0.1);
   }
 
+  const scoreRange = maxScore - minScore || 1;
+
+  // Y축 4등분 계산을 위해 값 계산
+  const gridLines = [];
+  for (let i = 0; i <= 4; i++) {
+    const s = maxScore - (scoreRange / 4) * i;
+    const y = paddingTop + (chartH / 4) * i;
+    
+    // 단순화된 티어 문자열 생성 (예: Bronze II 또는 Master)
+    const tierParts = scoreToTierText(s).split(' ');
+    // tierParts가 3개 이상이면(일반 티어: Bronze II 20LP) 첫 두단어 조합
+    // tierParts가 2개 이하이면(마스터 이상: Master 500LP) 첫단어만 사용
+    const shortTier = tierParts.length >= 3 ? `${tierParts[0]} ${tierParts[1]}` : tierParts[0];
+    
+    gridLines.push({ y, text: shortTier });
+  }
+
   const points = data.map((d, i) => {
-    const x = paddingLeft + (i * (chartW / (data.length - 1)));
-    const y = paddingTop + (chartH - ((d.score - minScore) / (maxScore - minScore) * chartH));
-    return { x, y, label: d.label, tierText: d.tierText };
+    // 점이 1개일 경우 가운데 배치
+    const x = data.length === 1 
+      ? paddingLeft + chartW / 2 
+      : paddingLeft + (i * (chartW / (data.length - 1)));
+    const y = paddingTop + (chartH - ((d.score - minScore) / scoreRange * chartH));
+    return { x, y, label: d.label, tierText: d.tierText, tooltipDate: d.tooltipDate };
   });
 
   let dPath = '';
   points.forEach((p, i) => {
-    if (i === 0) {
-      dPath += 'M ' + p.x + ' ' + p.y;
-    } else {
-      dPath += ' L ' + p.x + ' ' + p.y;
-    }
+    if (i === 0) dPath += 'M ' + p.x + ' ' + p.y;
+    else dPath += ' L ' + p.x + ' ' + p.y;
   });
 
-  let svgContent = '<svg class="tg-chart-svg" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">' +
-    '<line x1="' + paddingLeft + '" y1="' + paddingTop + '" x2="' + (width - paddingRight) + '" y2="' + paddingTop + '" stroke="rgba(255,255,255,0.03)" stroke-dasharray="3,3" />' +
-    '<line x1="' + paddingLeft + '" y1="' + (paddingTop + chartH / 2) + '" x2="' + (width - paddingRight) + '" y2="' + (paddingTop + chartH / 2) + '" stroke="rgba(255,255,255,0.03)" stroke-dasharray="3,3" />' +
-    '<line x1="' + paddingLeft + '" y1="' + (paddingTop + chartH) + '" x2="' + (width - paddingRight) + '" y2="' + (paddingTop + chartH) + '" stroke="rgba(255,255,255,0.03)" stroke-dasharray="3,3" />' +
-    '<line x1="' + paddingLeft + '" y1="' + (height - paddingBottom) + '" x2="' + (width - paddingRight) + '" y2="' + (height - paddingBottom) + '" stroke="rgba(255,255,255,0.15)" stroke-width="1" />' +
-    '<path class="tg-line" d="' + dPath + '" />';
+  let svgContent = '<svg class="tg-chart-svg" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">';
+  
+  // 가로선 및 Y축 레이블 그리기
+  gridLines.forEach(line => {
+    svgContent += `<line x1="${paddingLeft}" y1="${line.y}" x2="${width - paddingRight}" y2="${line.y}" stroke="rgba(255,255,255,0.03)" stroke-width="1" />`;
+    svgContent += `<text x="${paddingLeft - 8}" y="${line.y + 3}" text-anchor="end" class="tg-axis-text" style="font-size:9px; fill:rgba(255,255,255,0.4)">${line.text}</text>`;
+  });
 
-  points.forEach((p) => {
-    svgContent += '<circle class="tg-node-dot" cx="' + p.x + '" cy="' + p.y + '" r="3.5" title="' + p.tierText + '" />' +
-      '<text class="tg-node-text" x="' + p.x + '" y="' + (p.y - 8) + '" text-anchor="middle">' + p.tierText + '</text>' +
-      '<text class="tg-axis-text" x="' + p.x + '" y="' + (height - 4) + '" text-anchor="middle">' + p.label + '</text>';
+  svgContent += '<path class="tg-line" d="' + dPath + '" />';
+
+  points.forEach((p, i) => {
+    let showXLabel = true;
+    if (points.length > 5) {
+      const skip = Math.ceil(points.length / 7);
+      if (i !== 0 && i !== points.length - 1 && i % skip !== 0) {
+        showXLabel = false;
+      }
+    }
+
+    let textAnchor = 'middle';
+    if (i === 0) textAnchor = 'start';
+    if (i === points.length - 1) textAnchor = 'end';
+
+    // 툴팁용 데이터를 data- 속성으로 삽입
+    svgContent += `<circle class="tg-node-dot" cx="${p.x}" cy="${p.y}" r="3.5" data-tier="${p.tierText}" data-date="${p.tooltipDate}" />`;
+    
+    if (showXLabel) {
+      svgContent += `<text class="tg-axis-text" x="${p.x}" y="${height - 8}" text-anchor="${textAnchor}">${p.label}</text>`;
+    }
   });
 
   svgContent += '</svg>';
   container.innerHTML = svgContent;
+
+  // 툴팁 이벤트 리스너 추가
+  const circles = container.querySelectorAll('.tg-node-dot');
+  circles.forEach(circle => {
+    circle.addEventListener('mouseenter', (e) => {
+      const rect = circle.getBoundingClientRect();
+      const tierText = circle.getAttribute('data-tier');
+      const dateText = circle.getAttribute('data-date');
+      
+      tooltip.innerHTML = `
+        <div class="tg-tt-date">${dateText}</div>
+        <div class="tg-tt-value">${tierText}</div>
+      `;
+      
+      // X 위치 보정 (화면 우측 넘어가지 않게)
+      let leftPos = rect.left + window.scrollX + rect.width / 2;
+      tooltip.style.left = leftPos + 'px';
+      tooltip.style.top = (rect.top + window.scrollY - 8) + 'px';
+      
+      tooltip.classList.add('show');
+    });
+    
+    circle.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+  });
 }
